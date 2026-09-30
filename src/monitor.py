@@ -239,7 +239,8 @@ def run(data_path: str, model_dir: str, outdir: str, figures_dir: str) -> dict:
     figs = make_monitor_figures(dt, trend, figures_dir)
     md = build_report(dt, sd, trend, v, os.path.join(outdir, "monitor_report.md"), figs)
     return {"verdict": v, "n_drift": len(v["drifted"]), "n_watch": len(v["watch"]),
-            "report": md, "figures": figs, "score_drift": sd}
+            "report": md, "figures": figs, "score_drift": sd,
+            "trend": trend, "drift": dt, "threshold": thr}
 
 
 if __name__ == "__main__":

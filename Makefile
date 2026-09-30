@@ -1,4 +1,4 @@
-.PHONY: install demo train test serve dashboard monitor clean docker
+.PHONY: install demo train test serve dashboard monitor digest clean docker
 
 install:
 	pip install -r requirements.txt
@@ -16,6 +16,11 @@ test:
 
 monitor:
 	python3 scripts/run_monitor.py
+
+digest:
+	python3 src/digest.py            # haftalik (kadans avtomatik); majburiy: --force
+digest-preview:
+	python3 src/digest.py --preview
 
 serve:
 	uvicorn src.api.app:app --host 0.0.0.0 --port 8001

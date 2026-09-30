@@ -43,6 +43,25 @@ services:
       - carbon-reports:/app/reports
     restart: unless-stopped
 
+  carbon-digest:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: carbon-digest
+    # haftalik monitoring dayjesti (kadans state fayli bilan; kuniga tekshiradi, haftada bir yuboradi)
+    command: ["sh", "-c", "while true; do python3 src/digest.py; sleep 86400; done"]
+    environment:
+      ECO_BOT_TOKEN: ${ECO_BOT_TOKEN:?ECO_BOT_TOKEN kerak (.env)}
+      ECO_ADMIN_CHAT_ID: ${ECO_ADMIN_CHAT_ID:-}
+    volumes:
+      - carbon-models:/app/models
+      - carbon-data:/app/data
+      - carbon-reports:/app/reports
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
 volumes:
   carbon-models:
   carbon-data:

@@ -6,9 +6,9 @@
     "contamination": 0.12,
     "random_state": 42
   },
-  "train_seconds": 4.24,
+  "train_seconds": 3.68,
   "rule_version": "1.0",
-  "trained_at": "2026-09-29 17:35:01",
+  "trained_at": "2026-09-30 16:39:38",
   "features": [
     "log_reported",
     "qoq_growth_reported",
