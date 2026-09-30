@@ -1,5 +1,7 @@
 # E-GAZ-AUDIT MVP — ishlaydigan prototip
 
+[![CI](https://github.com/jasur-ai/egaz-audit-mvp/actions/workflows/ci.yml/badge.svg)](https://github.com/jasur-ai/egaz-audit-mvp/actions/workflows/ci.yml) · **Repo:** https://github.com/jasur-ai/egaz-audit-mvp
+
 > Bu papka — **TZ (`../TZ/Loyiha1_AI_anomaliya_TZ.md`) bo'yicha S0–S10 bosqichlarning bajarilgan yadrosi**
 > (S1 generator → S3 feature → S4 IF → S5 AE/OCSVM → S6 baholash → S7 serving).
 > Real korxona ma'lumotlari yopiq bo'lgani uchun UZ-proksi sintetik oqim ishlatiladi (TZ §6 — uch qatlamli strategiya).
