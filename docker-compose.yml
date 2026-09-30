@@ -1,0 +1,10 @@
+# S9 — bir server, ikki konteyner (TZ §7.2 «MVP: 1 server» mantiqi)
+services:
+  carbon-api:
+    build: .
+    ports:
+      - "8001:8001"
+    environment:
+      CARBON_MODEL_DIR: /app/models
+    restart: unless-stopped
+    # demo ma'lumotlar image ichida; yangilash uchun: docker compose run --rm carbon-api python3 scripts/run_all.py
