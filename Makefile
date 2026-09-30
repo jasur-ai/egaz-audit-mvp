@@ -1,4 +1,4 @@
-.PHONY: install demo train test serve dashboard clean docker
+.PHONY: install demo train test serve dashboard monitor clean docker
 
 install:
 	pip install -r requirements.txt
@@ -13,6 +13,9 @@ dashboard:
 
 test:
 	python3 -m pytest -q tests/
+
+monitor:
+	python3 scripts/run_monitor.py
 
 serve:
 	uvicorn src.api.app:app --host 0.0.0.0 --port 8001

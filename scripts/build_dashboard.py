@@ -21,6 +21,7 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src import features as F                      # noqa: E402
 from src.evaluate import metrics_at, per_type_recall  # noqa: E402
+from src import monitor as MN                     # noqa: E402
 from src.models import score_if                    # noqa: E402
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -105,7 +106,9 @@ def main():
     figs_html = ""
     for fname, title in (("pr_roc.png", "PR / ROC kurvalari — model ajratish sifati"),
                          ("score_dist.png", "Skor taqsimoti — normal va anomaliya"),
-                         ("per_type_recall.png", "A1–A8 turlari bo'yicha recall")):
+                         ("per_type_recall.png", "A1–A8 turlari bo'yicha recall"),
+                         ("drift_psi.png", "Feature dreyfi (PSI) — train → test"),
+                         ("fpr_trend.png", "FPR va Recall trendi (threshold muzlatilgan)")):
         p = os.path.join(FIGS, fname)
         if os.path.exists(p):
             figs_html += f'<figure><img src="data:image/png;base64,{b64(p)}" alt="{title}"><figcaption>{title}</figcaption></figure>'
@@ -119,6 +122,28 @@ def main():
                       f"<td class='true'>{r['true_type']}</td></tr>")
 
     per_html = "".join(f"<div class='chip'>{k}<b>{v:.2f}</b></div>" for k, v in per.items())
+
+    # S8 real qismi: dreyf va FPR trendi (monitor.py)
+    mon = MN.run(os.path.join(DATA, "features_v1.csv.gz"), MODELS,
+                 os.path.join(BASE, "reports"), FIGS)
+    vd = mon["verdict"]
+    drift_rows = MN.drift_table(X[tr], X[~tr], feats)[:8]
+    vcolor = {"QAYTA O'QITISH tavsiya etiladi": "var(--red)",
+              "THRESHOLDNI QAYTA KALIBRLASH tavsiya etiladi": "var(--yel)"}.get(vd["action"], "var(--grn)")
+    drift_html = ""
+    for r in drift_rows:
+        st = {"dreyf": "🔴", "kuzatuv": "🟡", "stabil": "🟢", "vaqt": "⚪"}[r["status"]]
+        drift_html += (f"<tr><td><code>{r['feature']}</code></td><td class='num'>{r['psi']}</td>"
+                       f"<td class='num'>{r['ks_stat']}</td><td>{st} {r['status']}</td></tr>")
+    trend = MN.fpr_trend(y_te, s_te, m_te, thr)
+    trend_html = ""
+    for t in trend:
+        fpr = t["fpr"] or 0.0
+        col = "style='color:var(--red);font-weight:700'" if fpr > 0.10 else ""
+        trend_html += (f"<tr><td>{t['quarter']}</td><td class='num'>{t['n']:,}</td>"
+                       f"<td class='num' {col}>{fpr:.4f}</td>"
+                       f"<td class='num'>{t['recall']:.4f}</td></tr>")
+    reasons_html = " · ".join(vd["reason"])
 
     html = f"""<!doctype html><html lang="uz"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -188,6 +213,24 @@ def main():
  </table>
  <div class="note"><b>O'qish qoidasi:</b> bu panel <u>qaror chiqarmaydi</u> — faqat tekshiruv ustuvorligini ko'rsatadi.
   Har bir signal inson ko'rigiga tushadi (AC-5); «biz bilgan tur» ustuni faqat sinov ma'lumotida mavjud (real tizimda yo'q).</div>
+
+ <h2>Model monitoring — dreyf va FPR trendi (S8)</h2>
+ <div class="note" style="border-left:4px solid {vcolor}">
+  <b>Qaror: <span style="color:{vcolor}">{vd['action']}</span></b><br>{reasons_html}</div>
+ <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin-top:10px">
+  <div>
+   <div class="legend" style="margin:0 0 6px">Eng katta dreyfi bo'lgan feature'lar (PSI)</div>
+   <table><tr><th>Feature</th><th>PSI</th><th>KS stat</th><th>Holat</th></tr>{drift_html}</table>
+   <div class="note">PSI: &lt;0,10 stabil · 0,10–0,25 kuzatuv · &gt;0,25 dreyf. ⚪ vaqt indeksi konstruksiya
+    bo'yicha o'zgaradi — qarorga kirmaydi. To'liq: <code>reports/monitor_report.md</code></div>
+  </div>
+  <div>
+   <div class="legend" style="margin:0 0 6px">Davrlar kesimida (threshold muzlatilgan)</div>
+   <table><tr><th>Davr</th><th>Yozuv</th><th>FPR</th><th>Recall</th></tr>{trend_html}</table>
+   <div class="note">FPR 2026Q1 da chegara (0,10) dan oshgan — model emas, <b>threshold</b> yangi train
+    davridan qayta hisoblanishi tavsiya etiladi.</div>
+  </div>
+ </div>
 
  <h2>Model monitoring — audit izi (AC-8)</h2>
  <table>

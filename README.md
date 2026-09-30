@@ -12,7 +12,8 @@
 cd MVP
 make install                      # yoki: pip install -r requirements.txt
 make demo                         # S1→S6 quvur (~35 s) + S8 dashboard
-make test                         # 25 test
+make test                         # 41 test
+make monitor                      # dreyf/FPR trendi hisoboti
 make serve                        # S7: serving :8001
 make docker                       # S9: konteyner
 ```
@@ -26,7 +27,9 @@ make docker                       # S9: konteyner
 | `models/if_v1.joblib`, `ocsvm.joblib`, `ae.joblib` | S4/S5: uch model + `metadata.json` (audit izi) |
 | `reports/eval_report.md` | S6: metrikalar, FPR, recall@k, tur bo'yicha recall, induksiya vaqti |
 | `reports/figures/*.png` | PR-kurva, skor taqsimoti, tur bo'yicha recall |
-| `web/dashboard.html` | S8 monitoring paneli (KPI, alert feed, izohlar, audit izi) |
+| `web/dashboard.html` | S8 monitoring paneli (KPI, alert feed, izohlar, dreyf/FPR trendi, audit izi) |
+| `reports/monitor_report.md` | Dreyf hisoboti: PSI/KS jadvali, FPR trendi, qayta o'qitish/kalibrlash qarori |
+| `deploy/` | Ishlab chiqarish tarkibi (compose prod + healthcheck + avtomatik kunlik monitoring) |
 
 ## Bosqichlar xaritasi (TZ §4)
 
@@ -40,5 +43,6 @@ make docker                       # S9: konteyner
 | S6 Baholash harness | `reports/eval_report.md` + `figures/*.png` | ✅ `src/evaluate.py` |
 | S7 Serving | FastAPI + `/score` | ✅ `src/api/app.py` (sinxron endpointlar — FastAPI avtomatik threadpool; TZ §S7 tuzoq qoidasi) |
 | S8 Dashboard | `dashboard/app.py`, skrinshotlar | ✅ `web/dashboard.html` (statik, CDN'siz; `make dashboard`) |
-| S9 Test/Docker/hujjat | CI, 20+ test, docs | ✅ **25 test** · `Dockerfile` · `docker-compose.yml` · `.github/workflows/ci.yml` · `docs/architecture.md` · `docs/limitations.md` |
+| S8 Monitoring (real qism) | dreyf/FPR trendi | ✅ `src/monitor.py` + `scripts/run_monitor.py` — PSI/KS, FPR trendi, qaror qoidalari (dashboard'ga ulangan) |
+| S9 Test/Docker/hujjat | CI, 20+ test, docs | ✅ **41 test** · `Dockerfile` · `docker-compose.yml` · `.github/workflows/ci.yml` · `docs/architecture.md` · `docs/limitations.md` |
 | S10 Demo/himoya | taqdimot, final hisobot | ✅ `presentation/DEMO.md` (10 slayd + hakam savollari); hisobot: `reports/eval_report.md` |

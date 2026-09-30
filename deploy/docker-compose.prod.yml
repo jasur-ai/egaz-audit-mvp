@@ -1,0 +1,49 @@
+# E-GAZ-AUDIT (L1) — production serving. Ishga tushirish:
+#   1) docker compose -f deploy/docker-compose.prod.yml run --rm carbon-api python3 scripts/run_all.py
+#   2) docker compose -f deploy/docker-compose.prod.yml run --rm carbon-api python3 scripts/run_monitor.py
+#   3) docker compose -f deploy/docker-compose.prod.yml up -d
+services:
+  carbon-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: carbon-api
+    command: ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "2"]
+    environment:
+      CARBON_MODEL_DIR: /app/models
+    volumes:
+      - carbon-models:/app/models
+      - carbon-data:/app/data
+      - carbon-reports:/app/reports
+    ports:
+      - "127.0.0.1:8001:8001"        # faqat localhost — nginx orqali ochiladi
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8001/v1/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+  carbon-monitor:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: carbon-monitor
+    # kunlik dreyf/FPR tekshiruvi (har 24 soat)
+    command: ["sh", "-c", "while true; do python3 scripts/run_monitor.py; sleep 86400; done"]
+    environment:
+      CARBON_MODEL_DIR: /app/models
+    volumes:
+      - carbon-models:/app/models
+      - carbon-data:/app/data
+      - carbon-reports:/app/reports
+    restart: unless-stopped
+
+volumes:
+  carbon-models:
+  carbon-data:
+  carbon-reports:
