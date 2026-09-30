@@ -1,7 +1,7 @@
 # S6 — Baholash hisoboti (avtomatik)
 
 **Yozuvlar:** 50,600 (train 41,400 / test 9,200) · **injection:** 15% · **seed:** 42
-**Feature:** 26 ta (6 guruh) · **Quvur vaqti:** 19.6 s
+**Feature:** 26 ta (6 guruh) · **Quvur vaqti:** 22.4 s
 
 ## Asosiy natijalar (test = 2025Q3–2026Q2)
 
@@ -27,7 +27,7 @@
 
 - **Recall@top-5%** (faqat eng shubhali 5%ni tekshirish): **0.1223**
 - **Biznes taqqoslash:** bazadagi anomaliya ulushi 0.1999, model top-200 aniqligi 0.67 → **3.4× yaxshilanish**
-- **Inferens:** 0.04 ms / 1 000 yozuv
+- **Inferens:** 0.03 ms / 1 000 yozuv
 - **Tur bo'yicha recall (A1–A8):** {"A1": 0.533, "A2": 0.412, "A3": 0.42, "A4": 0.993, "A5": 0.158, "A6": 0.642, "A7": 0.079, "A8": 0.065}
 
 ## Figuralar

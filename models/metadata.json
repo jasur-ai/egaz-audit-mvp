@@ -8,7 +8,7 @@
   },
   "train_seconds": 3.68,
   "rule_version": "1.0",
-  "trained_at": "2026-09-30 16:39:38",
+  "trained_at": "2026-09-30 16:42:28",
   "features": [
     "log_reported",
     "qoq_growth_reported",
