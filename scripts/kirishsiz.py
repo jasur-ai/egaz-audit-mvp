@@ -256,6 +256,13 @@ def cmd_pastdan(a) -> int:
     # --- 1) EF zanjiri
     ef_past, ef_yuqori = a.ef_past, a.ef_yuqori
     izoh = []
+    if a.emep:
+        ef_past = BU.emep_ef_g_per_kwh(max(_nums(a.fik) or [0.5]), "nox")
+        ef_yuqori = BU.emep_ef_g_per_kwh(min(_nums(a.fik) or [0.35]), "nox")
+        izoh.append({"emep": BU.EMEP_EEA_2023["manba"],
+                     "g_per_gj": BU.EMEP_EEA_2023["ef"]["nox_g_per_gj"],
+                     "ci": BU.EMEP_EEA_2023["ef"]["nox_ci"],
+                     "g_per_kwh": [round(ef_past, 3), round(ef_yuqori, 3)]})
     if a.lb_past is not None or a.lb_yuqori is not None:
         fiklar = _nums(a.fik) or [0.35, 0.5]
         lp = a.lb_past if a.lb_past is not None else a.lb_yuqori
@@ -316,7 +323,12 @@ def cmd_pastdan(a) -> int:
 
     # --- 5) chop etish
     print(f"PASTDAN YUQORIGA — {nom} · {masofa:.2f} km" + (f" · azimut {azimut:.1f}°" if azimut is not None else ""))
-    if izoh:
+    if izoh and "emep" in izoh[0]:
+        z = izoh[0]
+        print(f"  EF zanjiri (EMEP/EEA 2023 1.A.1.a): {z['g_per_gj']:g} g/GJ "
+              f"(CI95 {z['ci'][0]:g}–{z['ci'][1]:g}) → FIK bo'yicha {z['g_per_kwh'][0]}–{z['g_per_kwh'][1]} g NOx/kWh "
+              f"· {z['emep'][:60]}…")
+    elif izoh:
         z = izoh[0]
         print(f"  EF zanjiri: {z['lb_mmbtu'][0]}–{z['lb_mmbtu'][1]} lb/MMBtu = "
               f"{z['g_gj'][0]}–{z['g_gj'][1]} g/GJ → FIK {z['fik'][0]:.0%}–{z['fik'][1]:.0%} → "
@@ -345,6 +357,103 @@ def cmd_pastdan(a) -> int:
     print(f"\n  Nima isbotlanmaydi: {res['nima_isbotlanmaydi']}")
     print("  Isbot kuchi: 3 · EF adabiyot qiymati, dispersiya soddalashtirilgan (bitta shamol, "
           "bir necha soat emas, o'rtacha yil)")
+    return 0
+
+
+def cmd_profil(a) -> int:
+    """Yo'nalish profili — 15° lik burchaklar bo'yicha o'rtacha (sektorni qo'lda tanlash o'rniga)."""
+    from src.kirishsiz import sector as S  # noqa: E402
+
+    aq = _rows(a.fayl) if a.fayl else _rows("data/public/aq_180kun.csv")
+    wd = _rows(a.shamol_fayl) if a.shamol_fayl else _rows("data/public/wind_era5_180kun.csv")
+    wmap = {r["vaqt"]: r["shamol_yonalishi_grad"] for r in wd}
+    winds = [wmap.get(r["vaqt"]) for r in aq]
+    ustunlar = [m.strip() for m in (a.modda or "no2_ug_m3,pm2_5_ug_m3").split(",") if m.strip()]
+    natijalar = {}
+    for u in ustunlar:
+        if u not in (aq[0] if aq else {}):
+            print(f"⚠️  {u} ustuni faylda yo'q")
+            continue
+        natijalar[u] = S.yonalish_profili([r[u] for r in aq], winds, a.qadam, a.kamida)
+
+    if a.json:
+        _print_json({"fayl": a.fayl or "data/public/aq_180kun.csv", "profillar": natijalar})
+        return 0
+
+    print(f"YO'NALISH PROFILI — {a.fayl or 'data/public/aq_180kun.csv'} · qadam {a.qadam:g}° · "
+          f"kamida {a.kamida} soat")
+    for u, pr in natijalar.items():
+        ch = pr["cho_qqi"]
+        pa = pr["past"]
+        print(f"\n══ {u} ══  cho'qqi {ch['burchak']}° = {ch['ort']} (n={ch['n']}) · "
+              f"eng past {pa['burchak']}° = {pa['ort']} · nisbat {ch['ort']/pa['ort']:.2f}×")
+        print(S.profil_grafik(pr))
+        if a.obyektlar:
+            from src.kirishsiz import facilities as F  # noqa: E402
+            from src.kirishsiz.plume import angle_diff  # noqa: E402
+            mos = [o for o in F.from_receptor(a.lat, a.lon)
+                   if angle_diff(o["azimut"], ch["burchak"]) <= a.qadam]
+            if mos:
+                print(f"  shu burchakda ({ch['burchak']}°±{a.qadam:g}°): " +
+                      " · ".join(f"{o['nom'][:36]} ({o['masofa_km']:.1f} km)" for o in mos))
+            else:
+                print(f"  shu burchakda reyestrda obyekt yo'q — profil **yangi nomzod** ko'rsatyapti")
+    print("\n  Izoh: cho'qqi burchagi — nomzod, tasdiqlangan manba emas; model katagi (CAMS) "
+          "o'lchamidan kichik masofalar ajratilmaydi.")
+    return 0
+
+
+def cmd_retseptorlar(a) -> int:
+    """Retseptorlar reyestri: shahar nuqtalari bo'yicha alohida ekranlar."""
+    from src.kirishsiz import retseptorlar as R  # noqa: E402
+
+    nomlar = R.nomlar()
+    hisobot = {"retseptorlar": []}
+    for nom in nomlar:
+        r = R.top(nom)
+        yaqin = R.yaqin_obyektlar(nom, a.radius)
+        aq_yol = R.data_fayllar(nom, "aq")
+        sh_yol = R.data_fayllar(nom, "shamol")
+        qator = {"nom": nom, "lat": r["lat"], "lon": r["lon"], "manba": r["manba"],
+                 "sana": r["sana"], "daraja": r["daraja"], "yaqin_obyektlar": yaqin,
+                 "aq_fayl": aq_yol, "shamol_fayl": sh_yol}
+        if aq_yol:
+            from src.kirishsiz.retseptorlar import ROOT  # noqa: E402
+            yol = aq_yol if os.path.isabs(aq_yol) else os.path.join(ROOT, aq_yol)
+            if os.path.exists(yol):
+                rows = _rows(yol)
+                qator["dozalar"] = R.qiymat_xulosasi({
+                    "pm2_5": [x.get("pm2_5_ug_m3") for x in rows],
+                    "pm10": [x.get("pm10_ug_m3") for x in rows],
+                    "no2": [x.get("no2_ug_m3") for x in rows],
+                    "so2": [x.get("so2_ug_m3") for x in rows]})
+        hisobot["retseptorlar"].append(qator)
+    hisobot["era5_katak"] = R.era5_katak_tekshiruvi({n: R.data_fayllar(n, "shamol") for n in nomlar})
+
+    if a.json:
+        _print_json(hisobot)
+        return 0
+
+    print(f"RETSEPTORLAR REYESTRI — {len(nomlar)} nuqta · radius {a.radius:g} km · "
+          f"manba: data/public/retseptorlar_uz.json")
+    for q in hisobot["retseptorlar"]:
+        print(f"\n── {q['nom']} ({q['lat']:.4f}/{q['lon']:.4f}) · daraja {q['daraja']} · {q['sana']}")
+        print(f"   manba: {q['manba'][:88]}")
+        d = q.get("dozalar")
+        if d:
+            print(f"   AQ (180 kun): PM2,5 {d['pm2_5']['ort']:>5.2f} (P90 {d['pm2_5']['p90']:>5.2f}) · "
+                  f"PM10 {d['pm10']['ort']:>5.2f} · NO2 {d['no2']['ort']:>5.2f} · SO2 {d['so2']['ort']:>4.2f}")
+        if q["yaqin_obyektlar"]:
+            print(f"   yaqin obyektlar ({len(q['yaqin_obyektlar'])}):")
+            for o in q["yaqin_obyektlar"][:5]:
+                print(f"     • {o['nom'][:42]:<44}{o['azimut']:>6.1f}° {o['masofa_km']:>6.2f} km · {o['tur']}")
+        else:
+            print("   yaqin obyektlar: yo'q — **yangi nomzod kerak** (reyestr bo'shlig'i)")
+    ek = hisobot["era5_katak"]
+    if ek.get("ogohlantirish"):
+        print(f"\n  ⚠️  ERA5: {ek['ogohlantirish']}")
+        print(f"      bir xil katak: {ek['bir_xil_katak']}")
+    print("\n  Izoh: har nuqta — alohida ekran; meteorologiya o'sha nuqtaning ERA5 qatori.")
     return 0
 
 
@@ -485,6 +594,8 @@ def main() -> int:
     p.add_argument("--lb-past", type=float, help="EF, lb/MMBtu (AP-42 quyi, masalan 0,13)")
     p.add_argument("--lb-yuqori", type=float, help="EF, lb/MMBtu (AP-42 yuqori, masalan 0,32)")
     p.add_argument("--fik", default="0.35,0.50", help="foydali FIK lar (vergul bilan), masalan 0.35,0.50")
+    p.add_argument("--emep", action="store_true",
+                   help="EF ni EMEP/EEA 2023 1.A.1.a Table 3-4 dan olish (89 g/GJ, CI 15–185)")
     p.add_argument("--masofa", type=float, help="masofa, km (berilmasa --obyekt dan)")
     p.add_argument("--shamol", type=float, default=4.0, help="shamol tezligi, m/s (o'rtacha)")
     p.add_argument("--barqarorlik", default="D", help="Briggs barqarorlik sinfi: A…F")
@@ -500,6 +611,24 @@ def main() -> int:
     p.add_argument("--azimut", type=float, help="obyekt azimuti (--obyekt berilmasa)")
     p.add_argument("--kuzatuv", type=float, help="kuzatilgan yo'nalish ortiqchasi, µg/m³")
     p.set_defaults(fn=cmd_pastdan)
+
+    p = sub.add_parser("profil", parents=[umumiy],
+                       help="yo'nalish profili (15° burchaklar) — sektorni qo'lda tanlamaslik uchun")
+    p.add_argument("--fayl", default="data/public/aq_180kun.csv", help="havo sifati fayli")
+    p.add_argument("--shamol-fayl", default="data/public/wind_era5_180kun.csv", help="shamol fayli")
+    p.add_argument("--modda", default="no2_ug_m3,pm2_5_ug_m3", help="ustunlar (vergul bilan)")
+    p.add_argument("--qadam", type=float, default=15.0, help="burchak qadami (360 ning bo'luvchisi)")
+    p.add_argument("--kamida", type=int, default=20, help="bin uchun minimal soat soni")
+    p.add_argument("--lat", type=float, default=41.311, help="receptor kengligi")
+    p.add_argument("--lon", type=float, default=69.240, help="receptor uzunligi")
+    p.add_argument("--obyektlar", action="store_true",
+                   help="cho'qqi burchakda reyestrdagi obyektlarni ko'rsatish")
+    p.set_defaults(fn=cmd_profil)
+
+    p = sub.add_parser("retseptorlar", parents=[umumiy],
+                       help="retseptorlar reyestri — shahar nuqtalari bo'yicha alohida ekranlar")
+    p.add_argument("--radius", type=float, default=30.0, help="yaqin obyektlar radiusi, km")
+    p.set_defaults(fn=cmd_retseptorlar)
 
     p = sub.add_parser("benford", parents=[umumiy], help="Benford/dumaloq raqam skriningi")
     p.add_argument("--fayl")

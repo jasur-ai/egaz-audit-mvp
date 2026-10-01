@@ -256,3 +256,45 @@ def test_consistency_ratio_math():
     assert r["nisbat"] == pytest.approx(2.25)
     with pytest.raises(ValueError):
         B.consistency(0, 9.0)
+
+# ---------------------------------------------------------------- EMEP/EEA 2023
+
+
+def test_emep_ef_konversiya():
+    # 89 g/GJ, FIK 35% → 0,915 g NOx/kWh
+    assert B.emep_ef_g_per_kwh(0.35, "nox") == pytest.approx(0.915, abs=0.002)
+    assert B.emep_ef_g_per_kwh(0.50, "nox") == pytest.approx(0.641, abs=0.002)
+
+
+def test_emep_ef_boshqa_moddalar():
+    assert B.emep_ef_g_per_kwh(0.50, "co") == pytest.approx(0.281, abs=0.003)
+    assert B.emep_ef_g_per_kwh(0.50, "pm25") == pytest.approx(0.001, abs=0.001)
+    with pytest.raises(ValueError):
+        B.emep_ef_g_per_kwh(0.5, "yoq")
+
+
+def test_emep_konstantalar_manbali():
+    m = B.EMEP_EEA_2023
+    assert m["ef"]["nox_g_per_gj"] == 89.0
+    assert m["ef"]["nox_ci"] == (15.0, 185.0)
+    assert "1.A.1.a" in m["manba"] and m["tier"] == "A"
+
+
+def test_ef_taqqoslash_kelishadi():
+    r = B.ef_taqqoslash((55.9, 137.6), 89.0)
+    assert r["emep_ap42_ichida"] is True
+    assert "kelishadi" in r["xulosa"]
+    assert r["ap42_geo_orta"] == pytest.approx(87.7, abs=0.3)
+
+
+def test_ef_taqqoslash_tashqarida():
+    r = B.ef_taqqoslash((55.9, 137.6), 300.0)
+    assert r["emep_ap42_ichida"] is False
+    assert "kelishmaydi" in r["xulosa"]
+
+
+def test_ef_taqqoslash_xato():
+    with pytest.raises(ValueError):
+        B.ef_taqqoslash((137.6, 55.9))       # tartib buzuq
+    with pytest.raises(ValueError):
+        B.ef_taqqoslash((55.9, 137.6), 0.0)

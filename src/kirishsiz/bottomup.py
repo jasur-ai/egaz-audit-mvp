@@ -163,6 +163,61 @@ def bottom_up(generation_twh: float, ef_low_g_per_kwh: float, ef_high_g_per_kwh:
     }
 
 
+# ---------------------------------------------------------------- EMEP/EEA 2023, 1.A.1.a (Tier 1)
+
+EMEP_EEA_2023 = {
+    "manba": "EMEP/EEA air pollutant emission inventory guidebook 2023, 1.A.1.a «Public electricity "
+             "and heat production», Table 3-4 (tabiiy gaz)",
+    "url": "https://www.eea.europa.eu/en/analysis/publications/emep-eea-guidebook-2023/"
+           "part-b-sectoral-guidance-chapters/1-energy/1-a-combustion/1-a-energy-industries-2023",
+    "sana": "2023-10-02",
+    "tier": "A",
+    "ef": {
+        "nox_g_per_gj": 89.0,        # CI 95%: 15–185
+        "nox_ci": (15.0, 185.0),
+        "co_g_per_gj": 39.0,         # CI 20–60
+        "nmvoc_g_per_gj": 2.6,       # CI 0.65–10.4
+        "sox_g_per_gj": 0.281,       # AQSh hududi; YeI 0,244
+        "pm_tsp_g_per_gj": 0.14,     # «<0,14» — aniqlash chegarasidan past
+        "pm10_g_per_gj": 0.14,
+        "pm25_g_per_gj": 0.14,
+        "pm_izoh": "«<» belgisi — o'lchov aniqlash chegarasidan past; baribir hisobda ishlatiladi",
+    },
+}
+
+
+def emep_ef_g_per_kwh(foydali_fik: float, modda: str = "nox") -> float:
+    """EMEP/EEA 2023 1.A.1.a koeffitsientini chiqish asosiga o'tkazish (g/kWh)."""
+    kalit = {"nox": "nox_g_per_gj", "co": "co_g_per_gj", "nmvoc": "nmvoc_g_per_gj",
+             "sox": "sox_g_per_gj", "pm25": "pm25_g_per_gj"}.get(modda)
+    if kalit is None:
+        raise ValueError(f"noma'lum modda: {modda}")
+    return g_per_gj_to_g_per_kwh(EMEP_EEA_2023["ef"][kalit], foydali_fik)
+
+
+def ef_taqqoslash(ap42_g_per_gj: tuple[float, float], emep_g_per_gj: float = 89.0) -> dict[str, Any]:
+    """AP-42 oralig'i bilan EMEP/EEA bitta qiymatini solishtirish.
+
+    Geometrik o'rtalar nisbati 10% dan kam bo'lsa — «kelishadi» deb baholanadi.
+    """
+    past, yuqori = ap42_g_per_gj
+    if not 0 < past <= yuqori or emep_g_per_gj <= 0:
+        raise ValueError("qiymatlar musbat va tartibda bo'lishi kerak")
+    geo = math.sqrt(past * yuqori)
+    nisbat = emep_g_per_gj / geo
+    ichida = past <= emep_g_per_gj <= yuqori
+    if abs(nisbat - 1.0) <= 0.10 and ichida:
+        xulosa = "**kelishadi** (10% dan kam farq, EMEP qiymati AP-42 oralig'i ichida)"
+    elif ichida:
+        xulosa = "EMEP qiymati AP-42 oralig'i ichida, lekin markazdan uzoqroq"
+    else:
+        xulosa = "**kelishmaydi** — EMEP qiymati AP-42 oralig'idan tashqarida"
+    return {"ap42_g_per_gj": [past, yuqori], "ap42_geo_orta": round(geo, 1),
+            "emep_g_per_gj": emep_g_per_gj, "nisbat": round(nisbat, 3),
+            "emep_ap42_ichida": ichida, "xulosa": xulosa,
+            "manba": "AP-42 §3.1-1 (lb/MMBtu → g/GJ) · EMEP/EEA 2023 1.A.1.a Table 3-4"}
+
+
 def sector_excess(values: Iterable[float | None], winds: Iterable[float | None], markaz: float,
                   kenglik: float = 45.0) -> dict[str, Any]:
     """Jonli ekrandan **yo'nalish ortiqchasi**: sektorda o'rtacha − sektordan tashqarida o'rtacha."""

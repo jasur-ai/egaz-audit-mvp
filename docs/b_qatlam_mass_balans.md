@@ -1,6 +1,6 @@
-# B-QATLAM: MASS-BALANS TEKSHIRUVI (pastdan yuqoriga, yo'l #2)
+# B-qatlam: mass-balans tekshiruvi (pastdan yuqoriga, yo'l #2)
 
-> Manba hujjat (to'liq nusxa): `YAKUNIY/16-B-QATLAM-MASS-BALANS.md` · sana: 2026-10-01 · kod: `src/kirishsiz/bottomup.py` · CLI: `scripts/kirishsiz.py pastdan` · testlar: `tests/test_kirishsiz_bottomup.py` (33)
+> Manba hujjat: `YAKUNIY/16-B-QATLAM-MASS-BALANS.md` · 2026-10-01 · kod: `src/kirishsiz/bottomup.py` · CLI: `scripts/kirishsiz.py pastdan` · testlar: `tests/test_kirishsiz_bottomup.py` (39)
 
 ---
 
@@ -58,12 +58,16 @@ AP-42 oralig'ining (0,40–1,42) **ichida**, ya'ni ikki mustaqil hujjat bir-biri
 | → g/GJ | **2,84 g/GJ** | ×429,9 |
 | → mg/kWh (FIK 35%) | **29,2 mg/kWh** | ×0,0036/0,35 |
 
-### 2.3. EMEP/EEA holati (ochiq band)
+### 2.3. EMEP/EEA holati — ✅ **YOPILDI (R50, 2-qism)**
 
 EMEP/EEA Guidebook 2023 **1.A.1** («Energy industries») bo'limining **aniq Tier 1 EF jadvali** hali olinmagan:
 EEA saytining «1.A.1 Energy industries 2023» sahifasi **faqat sarlavha va fayl havolasini** beradi (asosiy jadval JS orqali yuklanadi),
 qidiruv natijalari esa doimiy ravishda **1.A.3.d (navigatsiya)** jadvallariga olib keladi.
-Shu sababli bu yerda **AP-42 (reyting A)** asos qilib olindi va **NSPS** bilan tekshirildi. EMEP 1.A.1 bilan solishtirish — **qoldirilgan band** (§8, 3-qadam).
+**Yangilanish (01.10.2026):** EMEP/EEA 2023 **1.A.1.a Table 3-4** PDF manbasidan olindi —
+**NОx = 89 g/GJ (CI 15–185)**, **PM2,5 < 0,14 g/GJ**.
+AP-42 geometrik o'rtasi (87,7 g/GJ) bilan farq **1,5%** → **ikki tizim kelishadi**.
+EMEP asosidagi haydash: 0,641–0,915 g NOx/kWh → 3 717–5 309 t/yil → sektor o'rtachasi **3,7–7,4 µg/m³**,
+kuzatuv 9,24 → nisbat **1,25–2,50** (hamon «mos»). Batafsil: `17-B-QATLAM-2-QISM.md` §1.
 
 ---
 
@@ -146,7 +150,7 @@ mustaqil ravishda tasdiqlaydi.
 
 ---
 
-## 7. PM2,5 savoli — model nega past (halol chegara)
+## 7. PM2,5 savoli — model nega past (halol chegara) · **✅ YOPILDI (2-qism)**
 
 | Modda | Model (sektor o'rt.) | Kuzatuv (sektor ortiqchasi) | Nisbat |
 |---|---|---|---|
@@ -160,6 +164,12 @@ Ehtimoliy izohlar — hammasi **tasdiqlanmagan**:
 3. uzoq manbalarning shahar ustidan o'tishi.
 
 Bu — «nima isbotlanmaydi» ro'yxatining eng muhim qatori: **PM2,5 bo'yicha sabab ajratilmaydi.**
+
+**Yangilanish (01.10.2026, olti sinov — `17-B-QATLAM-2-QISM.md` §2):**
+(1) mass-rekonstruksiya modeli kuzatuvning **4,2%** ini beradi (EMEP bilan 0,2%);
+(2) **chang emas** — sektorda CAMS `dust` **kamroq** (lift 0,76), AOD 0,96;
+(3) zarra spektri nozik tomonga siljigan (PM2,5/PM10: 0,724 vs 0,626) → **ikkilamchi aerozol/boshqa nozik manba** gipotezasi qoldi;
+(4) NO2 va PM2,5 **turli yo'nalish profillari**: 60° (5,01×) va 105° (1,55×) — bir manba emas.
 
 ---
 
@@ -241,7 +251,8 @@ PASTDAN YUQORIGA — Toshkent IES · 13.28 km · azimut 54.9°
 ## 12. Keyingi qadam
 
 1. **03–05.10** — 3 ta rasmiy talabni yuborish va muddatni yuritish (kuch 5).
-2. **10.10** — oynani isitish mavsumiga uzaytirish (qadam 3) + AP-42/EMEP **Tier 2** taqqoslash uchun EMEP 1.A.1 jadvalini topishga yana bir urinish (§2.3).
+2. **10.10** — oynani isitish mavsumiga uzaytirish (qadam 3) — **EMEP jadvali olindi** (§2.3),
+   modul tayyor (`mavsum.py`), keyingi qadamda birinchi **isitish lifti** o'lchanadi.
 3. **10–15.10** — FIRMS `MAP_KEY` olinishi bilan yonish nuqtalari (qadam 4); kalit kelmasa — **alternativa**: yonish nuqtasini ELV/hisobot ma'lumotidan emas, **tungi NO2 cho'qqilari** orqali skrining (yo'l #5 uslubi, hujjatlashtirilgan).
 4. **25–31.10** — Angren/Ohangaron retseptori (qadam 6) — uzun masofa uchun **alohida** ekran va alohida fon bahosi.
 5. PM2,5 uchun **ikkilamchi aerozol** gipotezasini sinash (SO2/NOx nisbati + namlik), §7 ni yopish.

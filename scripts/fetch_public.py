@@ -38,6 +38,8 @@ LITSENZIYA = {
     "open-meteo-aq": "CC-BY-4.0 (Open-Meteo; CAMS ma'lumoti)",
     "open-meteo-wind": "CC-BY-4.0 (Open-Meteo; ECMWF/ERA5)",
     "open-meteo-archive": "CC-BY-4.0 (Open-Meteo Archive API)",
+    "open-meteo-archive-havo": "CC-BY-4.0 (Open-Meteo Archive API; ECMWF/ERA5)",
+    "open-meteo-aq-qoshimcha": "CC-BY-4.0 (Open-Meteo; CAMS global)",
     "firms": "NASA FIRMS — ochiq (manba ko'rsatiladi)",
     "openaq": "CC-BY-4.0 (OpenAQ)",
     "carbon-mapper": "Carbon Mapper ochiq litsenziyasi (plume ma'lumotlari CC-BY-NC-SA bo'lishi mumkin)",
@@ -65,6 +67,22 @@ def url_open_meteo_archive(lat: float, lon: float, boshlanish: str, tugash: str)
     return ("https://archive-api.open-meteo.com/v1/archive"
             f"?latitude={lat}&longitude={lon}&start_date={boshlanish}&end_date={tugash}"
             "&hourly=wind_speed_10m,wind_direction_10m&timezone=Asia%2FTashkent")
+
+
+def url_open_meteo_archive_havo(lat: float, lon: float, boshlanish: str, tugash: str) -> str:
+    """ERA5: harorat + namlik (isitish mavsumi va ikkilamchi aerozol tahlili uchun)."""
+    return ("https://archive-api.open-meteo.com/v1/archive"
+            f"?latitude={lat}&longitude={lon}&start_date={boshlanish}&end_date={tugash}"
+            "&hourly=temperature_2m,relative_humidity_2m,precipitation"
+            "&timezone=Asia%2FTashkent")
+
+
+def url_open_meteo_aq_qoshimcha(lat: float, lon: float, kun: int) -> str:
+    """CAMS: chang (dust) va aerozol optik qalinligi — PM2,5 manbasini ajratish uchun."""
+    return ("https://air-quality-api.open-meteo.com/v1/air-quality"
+            f"?latitude={lat}&longitude={lon}"
+            "&hourly=pm2_5,pm10,dust,aerosol_optical_depth"
+            "&timezone=Asia%2FTashkent&past_days={kun}&forecast_days=0".format(kun=kun))
 
 
 def url_firms(bbox: str, kun: int) -> str:
@@ -163,6 +181,29 @@ def fetch_open_meteo_archive(lat: float, lon: float, boshlanish: str, tugash: st
     return manifest_add("open-meteo-archive", url, path, len(rows), "kerak emas")
 
 
+def fetch_open_meteo_archive_havo(lat: float, lon: float, boshlanish: str, tugash: str,
+                                   out: str | None) -> dict:
+    url = url_open_meteo_archive_havo(lat, lon, boshlanish, tugash)
+    d = json.loads(_get(url).decode("utf-8"))
+    h = d["hourly"]
+    rows = [[t, h["temperature_2m"][i], h["relative_humidity_2m"][i], h["precipitation"][i]]
+            for i, t in enumerate(h["time"])]
+    path = out or os.path.join(OUTDIR, f"era5-havo_{lat}_{lon}_{boshlanish}_{tugash}.csv")
+    save_csv(path, ["vaqt", "harorat_C", "namlik_foiz", "yogin_mm"], rows)
+    return manifest_add("open-meteo-archive-havo", url, path, len(rows), "kerak emas")
+
+
+def fetch_open_meteo_aq_qoshimcha(lat: float, lon: float, kun: int, out: str | None) -> dict:
+    url = url_open_meteo_aq_qoshimcha(lat, lon, kun)
+    d = json.loads(_get(url).decode("utf-8"))
+    h = d["hourly"]
+    rows = [[t, h["pm2_5"][i], h["pm10"][i], h["dust"][i], h["aerosol_optical_depth"][i]]
+            for i, t in enumerate(h["time"])]
+    path = out or os.path.join(OUTDIR, f"cams-qoshimcha_{lat}_{lon}_{kun}k.csv")
+    save_csv(path, ["vaqt", "pm2_5_ug_m3", "pm10_ug_m3", "chang_ug_m3", "aod"], rows)
+    return manifest_add("open-meteo-aq-qoshimcha", url, path, len(rows), "kerak emas")
+
+
 def fetch_firms(bbox: str, kun: int, out: str | None) -> dict:
     url = url_firms(bbox, kun)
     matn = _get(url).decode("utf-8", errors="replace")
@@ -220,6 +261,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Ochiq manbalardan ma'lumot yig'ish (provenans bilan)")
     ap.add_argument("--check", action="store_true", help="manbalar mavjudligini tekshirish")
     ap.add_argument("--source", choices=["open-meteo-aq", "open-meteo-wind", "open-meteo-archive",
+                                         "open-meteo-archive-havo", "open-meteo-aq-qoshimcha",
                                          "firms", "openaq"])
     ap.add_argument("--lat", type=float, default=41.311)
     ap.add_argument("--lon", type=float, default=69.240)
@@ -241,6 +283,10 @@ def main() -> int:
         rec = fetch_open_meteo_wind(a.lat, a.lon, a.kun, a.out)
     elif a.source == "open-meteo-archive":
         rec = fetch_open_meteo_archive(a.lat, a.lon, a.boshlanish, a.tugash, a.out)
+    elif a.source == "open-meteo-archive-havo":
+        rec = fetch_open_meteo_archive_havo(a.lat, a.lon, a.boshlanish, a.tugash, a.out)
+    elif a.source == "open-meteo-aq-qoshimcha":
+        rec = fetch_open_meteo_aq_qoshimcha(a.lat, a.lon, a.kun, a.out)
     elif a.source == "firms":
         rec = fetch_firms(a.bbox, a.kun, a.out)
     else:

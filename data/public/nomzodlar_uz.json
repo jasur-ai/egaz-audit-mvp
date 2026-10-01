@@ -77,6 +77,21 @@
       "sana": "2025-03-08",
       "tier": "B",
       "izoh": "Xitoy investitsiyasidagi zavod; ~67 km janubi-sharqda."
+    },
+    {
+      "nom": "Angren IES (ko'mir stansiyasi)",
+      "tur": "energetika",
+      "lat": 41.004897,
+      "lon": 70.122799,
+      "quvvat": "484 MVt (4×53 + 4×68) — industryabout; Wikidata: 393 MVt (manbalar farq qiladi)",
+      "yoqilg'i": "ko'mir (lignit) — gazdan farqli: SO2 va kul manbasi",
+      "koordinata_manba": "Global Energy Monitor — Angren power station (exact)",
+      "koordinata_url": "https://www.gem.wiki/Angren_power_station",
+      "quvvat_manba": "industryabout.com — Angren Coal Power Plant (484 MVt); Wikidata Q25532238 (393 MVt)",
+      "quvvat_url": "https://www.industryabout.com/country-territories-3/2015-uzbekistan/fossil-fuels-energy/30885-angren-coal-power-plant",
+      "sana": "2026-08-18",
+      "tier": "B",
+      "izoh": "1957-yildan ishlaydi; birliklar 1–11 (GEM). Ko'mir yoqilg'i — PM/SO2 bo'yicha gaz stansiyalaridan tubdan farq qiladi; profil tahlilida PM2,5 cho'qqisi (105°) shu yo'nalishga yaqin bo'lgani uchun reyestrga qo'shildi."
     }
   ]
 }

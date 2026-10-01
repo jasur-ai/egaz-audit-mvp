@@ -1,0 +1,45 @@
+{
+  "izoh": "Retseptorlar reyestri — shahar nuqtalari. Har yozuvda koordinata manbasi (URL), sana va daraja.",
+  "retseptorlar": [
+    {
+      "nom": "Toshkent markaz",
+      "lat": 41.311,
+      "lon": 69.24,
+      "manba": "loyiha bazaviy nuqtasi (A-qatlam hisobotlari)",
+      "manba_url": "workspace: 01-Loyiha1-Carbon-Emission/docs/a_qatlam_hisoboti.md",
+      "sana": "2026-10-01",
+      "daraja": "C",
+      "izoh": "A-qatlam ekrani uchun asosiy retseptor; 180 kun seriya mavjud"
+    },
+    {
+      "nom": "Ohangaron",
+      "lat": 40.905354,
+      "lon": 69.6400706,
+      "manba": "OpenStreetMap Nominatim — 'Ohangaron shahri' (relation 18507147)",
+      "manba_url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=Ohangaron%2C+Tashkent+Region",
+      "sana": "2026-10-01",
+      "daraja": "C",
+      "izoh": "sement klasteri markazi (Akhangarancement ~3 km, AGMK ~10 km, Conch ~12 km)"
+    },
+    {
+      "nom": "Angren",
+      "lat": 41.0212207,
+      "lon": 70.0795361,
+      "manba": "OpenStreetMap Nominatim — 'Angren shahri' (relation 7774377)",
+      "manba_url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=Angren%2C+Tashkent+Region",
+      "sana": "2026-10-01",
+      "daraja": "C",
+      "izoh": "ko'mir zonasi — reyestrda yaqin obyekt yo'q (Angren IES qo'shilishi kerak)"
+    },
+    {
+      "nom": "Olmaliq",
+      "lat": 40.845729,
+      "lon": 69.6071609,
+      "manba": "OpenStreetMap Nominatim — 'Olmaliq shahri' (relation 7726941)",
+      "manba_url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=Olmaliq%2C+Tashkent+Region",
+      "sana": "2026-10-01",
+      "daraja": "C",
+      "izoh": "kon-metallurgiya zonasi (AGMK ~6 km)"
+    }
+  ]
+}

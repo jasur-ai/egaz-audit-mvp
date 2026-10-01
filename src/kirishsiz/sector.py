@@ -148,3 +148,45 @@ def candidate_sector(lat: float, lon: float, nomzodlar: list[dict[str, Any]],
                           "masofa_km": round(haversine_m(lat, lon, c["lat"], c["lon"]) / 1000.0, 2)})
     return {"sektorlar": sektorlar,
             "eslatma": "Sektor markazi — nomzod yo'nalishi; tahlil shu sektor bo'yicha o'tkaziladi."}
+
+def yonalish_profili(qiymatlar: Iterable[float | None], winds: Iterable[float | None],
+                     qadam: float = 15.0, kamida: int = 5) -> dict[str, Any]:
+    """Yo'nalish profili: 15° lik burchaklar bo'yicha o'rtacha konsentratsiya.
+
+    Sektorni **qo'lda tanlash** o'rniga profil eng yuqori burchakni o'zi ko'rsatadi —
+    bu tanlov xatosi (cherry-picking) riskini kamaytiradi.
+    """
+    if qadam <= 0 or 360 % qadam:
+        raise ValueError("qadam 360 ning bo'luvchisi bo'lishi kerak")
+    savat: dict[int, list[float]] = {}
+    for v, w in _yaroqli(qiymatlar, winds):
+        b = int(((w + qadam / 2) % 360) // qadam) * int(qadam)
+        savat.setdefault(b, []).append(v)
+    binlar = []
+    for b in range(0, 360, int(qadam)):
+        v = savat.get(b, [])
+        binlar.append({"burchak": b, "n": len(v),
+                       "ort": round(sum(v) / len(v), 2) if v else None})
+    yaroqli = [b for b in binlar if b["n"] >= kamida and b["ort"] is not None]
+    cho_qqi = max(yaroqli, key=lambda x: x["ort"]) if yaroqli else None
+    past = min(yaroqli, key=lambda x: x["ort"]) if yaroqli else None
+    return {"qadam": qadam, "binlar": binlar, "cho_qqi": cho_qqi, "past": past,
+            "kamida_bin": kamida,
+            "izoh": "Cho'qqi burchagi — **nomzod**, tasdiqlangan manba emas; sektor kengligini "
+                    "profil kengligi (qadam) belgilaydi."}
+
+
+def profil_grafik(profil: dict[str, Any], kenglik: int = 30) -> str:
+    """Profilni ASCII ustunlar bilan ko'rsatish (chop etish uchun)."""
+    qiymatlar = [b["ort"] for b in profil["binlar"] if b["ort"] is not None]
+    if not qiymatlar:
+        return "(ma'lumot yo'q)"
+    eng = max(qiymatlar)
+    satrlar = [f"  {'burchak':>8}  {'o\u2019rt':>7}  {'n':>5}  profil"]
+    for b in profil["binlar"]:
+        if b["ort"] is None:
+            satrlar.append(f"  {b['burchak']:>7}°  {'—':>7}  {b['n']:>5}")
+            continue
+        uzun = int(round(b["ort"] / eng * kenglik)) if eng else 0
+        satrlar.append(f"  {b['burchak']:>7}°  {b['ort']:>7.2f}  {b['n']:>5}  {'▉' * uzun}")
+    return "\n".join(satrlar)
