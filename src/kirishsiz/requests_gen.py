@@ -43,7 +43,45 @@ STANDART_SOROVLAR = {
     "monitoring": "Hududdagi davlat monitoring stansiyalari ma'lumotlari (soatlik PM2,5/NO2/SO2) "
                   "va ularning joylashuvi",
     "fakel": "Mash'al/fakel qurilmalari ro'yxati va yonish rejimi (agar mavjud bo'lsa)",
+    # R53: isitish mavsumi tahlili aniqlagan **yagona yetishmayotgan bo'g'in** uchun
+    "isitish-qattiq": "Isitish mavsumi (noyabr–fevral) uchun aholiga sotilgan/berilgan qattiq "
+                      "yoqilg'i (ko'mir, briket, o'tin) hajmi — tuman va sotuvchi tashkilot "
+                      "kesimida; xususiy uylarda individual isitish qozonlari soni",
+    "gaz-isitish": "Aholi tomonidan iste'mol qilingan tabiiy gaz hajmi **oylar kesimida** "
+                    "(isitish mavsumi va mavsumdan tashqari), isitish mavsumi uchun belgilangan "
+                    "ijtimoiy me'yor statistikasi va isitish bilan ta'minlangan xonadonlar soni",
 }
+
+
+# R53 tahlilida **o'lchangan** natijalar — so'rovga asos sifatida qo'shiladi.
+# Har bir qator: (matn, manba/daraja). Raqamlar 365 kunlik ochiq ma'lumotdan (CAMS/ERA5).
+TOPILMALAR: list[tuple[str, str]] = [
+    ("Toshkent shahri (CAMS katagi, 2025-10-02 → 2026-10-01, 8 760 soat) bo'yicha PM2,5 "
+     "o'rtachasi isitish mavsumida 25,60 µg/m³, issiq mavsumda 15,36 µg/m³ — farq 1,67×",
+     "Open-Meteo/CAMS havo sifati arxivi, 2026-10-01 da olindi"),
+    ("Kunlik PM2,5 normadan (35 µg/m³) oshgan kunlar: isitish mavsumida 21/181, issiq mavsumda 0/183",
+     "o'sha manba, o'z hisobimiz"),
+    ("Shu davrda NOx/SO2/CO ko'rsatkichlari ham ~2 barobar oshadi, PM2,5/PM10 nisbati 0,68 → 0,86 "
+     "(nozik zarrachalar ulushi ortadi)", "o'sha manba, o'z hisobimiz"),
+    ("Angren (4 km masofadagi IES) retseptorida isitish mavsumi ko'tarilishi **yo'q** (0,97×) va "
+     "normadan oshgan kun **0** — ko'mir stansiyasi signali isitish mavsumida ham ustun emas",
+     "o'sha manba + GEM koordinatalari (Angren power station, exact)"),
+    ("Ohangaron/Olmaliq katagida 21 normadan oshgan kunning 3 tasi kuzatildi va uchalasi ham "
+     "sement kombinati yo'nalishidan **tashqarida**", "o'sha manba, o'z hisobimiz"),
+    ("EMEP/EEA 2023 1.A.4.b.i bo'yicha: tabiiy gaz PM2,5 1,2 g/GJ, qattiq yoqilg'i 398 g/GJ — "
+     "farq ~330×; shu sababli gaz isitish PM2,5 ortishini tushuntira olmaydi",
+     "EMEP/EEA Guidebook 2023, 1.A.4 Small combustion"),
+]
+
+
+def topilmalar_bloki(sarlavha: str = "Tadqiqotning ochiq ma'lumotlarga asoslangan natijalari") -> str:
+    """So'rovga qo'shiladigan qisqa asos bloki (o'lchangan raqamlar + manba)."""
+    qatorlar = [f"{sarlavha} (2026-yil oktabr holati):"]
+    for i, (matn, manba) in enumerate(TOPILMALAR, 1):
+        qatorlar.append(f"  {i}) {matn}. Manba: {manba}.")
+    qatorlar.append("  Shu sababli quyidagi ma'lumotlar so'ralmoqda — ular yuqoridagi "
+                    "farqni miqdoriy tushuntirish uchun yetishmayotgan yagona bo'g'in.")
+    return "\n".join(qatorlar)
 
 
 def build_request(
@@ -54,6 +92,7 @@ def build_request(
     aloqa: str = "⟦telefon / e-pochta⟧",
     sana: str | None = None,
     qoshimcha: Iterable[str] | None = None,
+    topilmalar: bool = True,
 ) -> dict[str, Any]:
     """So'rov matni (uz) + muddat hisobi. `murojaat_turi` — STANDART_SOROVLAR kaliti."""
     if murojaat_turi not in STANDART_SOROVLAR:
@@ -70,6 +109,8 @@ def build_request(
         f"Men, {sorovchi}, {obyekt} obyekti bo'yicha atrof-muhit holatiga oid quyidagi",
         "ma'lumotlarni so'rayman:",
         *[f"  {i}) {m}" for i, m in enumerate(mazmun, 1)],
+        "",
+        *([topilmalar_bloki()] if topilmalar else []),
         "",
         "Eslatma: so'ralayotgan ma'lumot davlat organlari tizimida mavjud bo'lgan rasmiy",
         "hujjat hisoblanadi; u savdo siri yoki shaxsga doir ma'lumotni oshkor qilmaydi.",

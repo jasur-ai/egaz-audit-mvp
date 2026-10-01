@@ -259,6 +259,96 @@
       "litsenziya": "CC-BY-4.0 (Open-Meteo Archive API; ECMWF/ERA5)",
       "olingan_vaqt_utc": "2026-10-01T13:12:27+00:00",
       "sha256": "5b194cf5f1afa111abfa51334965224af985f1144f9821143289309b5fd47b9a"
+    },
+    {
+      "manba": "open-meteo-aq-tarix",
+      "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=41.0212&longitude=70.0795&hourly=pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&start_date=2025-10-02&end_date=2026-10-01&timezone=Asia%2FTashkent",
+      "fayl": "data/public/aq_Angren_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo; CAMS tarixi 2022 dan)",
+      "olingan_vaqt_utc": "2026-10-01T13:21:56+00:00",
+      "sha256": "13a4844d3b8589486c5fc0cffd5e8def303d1913db6e1a4ebeeecfe30b97c489"
+    },
+    {
+      "manba": "open-meteo-archive",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=41.0212&longitude=70.0795&start_date=2025-10-02&end_date=2026-10-01&hourly=wind_speed_10m,wind_direction_10m&timezone=Asia%2FTashkent",
+      "fayl": "data/public/wind_Angren_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo Archive API)",
+      "olingan_vaqt_utc": "2026-10-01T13:21:59+00:00",
+      "sha256": "4a4a690dc98a208ac09022f654f5610942a1e96d36021c9bd9a280df589625f7"
+    },
+    {
+      "manba": "open-meteo-archive-havo",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=41.0212&longitude=70.0795&start_date=2025-10-02&end_date=2026-10-01&hourly=temperature_2m,relative_humidity_2m,precipitation&timezone=Asia%2FTashkent",
+      "fayl": "data/public/havo_Angren_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo Archive API; ECMWF/ERA5)",
+      "olingan_vaqt_utc": "2026-10-01T13:22:01+00:00",
+      "sha256": "04abf123caf7aae3d7e37be353726b8002fa55b7c738f2956a70119f2f127e49"
+    },
+    {
+      "manba": "open-meteo-aq-tarix",
+      "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.9054&longitude=69.6401&hourly=pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&start_date=2025-10-02&end_date=2026-10-01&timezone=Asia%2FTashkent",
+      "fayl": "data/public/aq_Ohangaron_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo; CAMS tarixi 2022 dan)",
+      "olingan_vaqt_utc": "2026-10-01T13:22:02+00:00",
+      "sha256": "1bd972466aa9cb3b46a32e243969528bbe46112ba4859f58e4495d6a7dbb3bc5"
+    },
+    {
+      "manba": "open-meteo-archive",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=40.9054&longitude=69.6401&start_date=2025-10-02&end_date=2026-10-01&hourly=wind_speed_10m,wind_direction_10m&timezone=Asia%2FTashkent",
+      "fayl": "data/public/wind_Ohangaron_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo Archive API)",
+      "olingan_vaqt_utc": "2026-10-01T13:22:04+00:00",
+      "sha256": "e4a358ea5a12dedfe7f8d49600ee6fcd3c567f4c42a1cec2e977cdb3d727d9d3"
+    },
+    {
+      "manba": "open-meteo-archive-havo",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=40.9054&longitude=69.6401&start_date=2025-10-02&end_date=2026-10-01&hourly=temperature_2m,relative_humidity_2m,precipitation&timezone=Asia%2FTashkent",
+      "fayl": "data/public/havo_Ohangaron_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo Archive API; ECMWF/ERA5)",
+      "olingan_vaqt_utc": "2026-10-01T13:22:06+00:00",
+      "sha256": "243e7c60c60b7199fa1e004cf1b417a15b39eaf87266c48992678bf412169550"
+    },
+    {
+      "manba": "open-meteo-aq-tarix",
+      "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.8457&longitude=69.6072&hourly=pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&start_date=2025-10-02&end_date=2026-10-01&timezone=Asia%2FTashkent",
+      "fayl": "data/public/aq_Olmaliq_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo; CAMS tarixi 2022 dan)",
+      "olingan_vaqt_utc": "2026-10-01T13:22:08+00:00",
+      "sha256": "fca58e5100e2c92a3fcbe3e6ba6c50710638a578e673f9cf51683e9c3165aa49"
+    },
+    {
+      "manba": "open-meteo-archive",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=40.8457&longitude=69.6072&start_date=2025-10-02&end_date=2026-10-01&hourly=wind_speed_10m,wind_direction_10m&timezone=Asia%2FTashkent",
+      "fayl": "data/public/wind_Olmaliq_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo Archive API)",
+      "olingan_vaqt_utc": "2026-10-01T13:22:10+00:00",
+      "sha256": "e4a358ea5a12dedfe7f8d49600ee6fcd3c567f4c42a1cec2e977cdb3d727d9d3"
+    },
+    {
+      "manba": "open-meteo-archive-havo",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=40.8457&longitude=69.6072&start_date=2025-10-02&end_date=2026-10-01&hourly=temperature_2m,relative_humidity_2m,precipitation&timezone=Asia%2FTashkent",
+      "fayl": "data/public/havo_Olmaliq_365kun.csv",
+      "qatorlar": 8760,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo Archive API; ECMWF/ERA5)",
+      "olingan_vaqt_utc": "2026-10-01T13:22:11+00:00",
+      "sha256": "243e7c60c60b7199fa1e004cf1b417a15b39eaf87266c48992678bf412169550"
     }
   ]
 }

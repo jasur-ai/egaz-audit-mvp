@@ -215,3 +215,67 @@ def epizod_atributsiya(times: Iterable[str], qiymatlar: Iterable, winds: Iterabl
             "xulosa": (f"{len(kunlar)} epizoddan {hisob['sektor_ustun']} tasida shamol asosan manba "
                        f"sektoridan; {hisob['sektordan_tashqarida']} tasida esa **undan emas**") if kunlar
             else "normadan oshgan kun yo'q"}
+
+
+def pearson(x: Iterable[float | None], y: Iterable[float | None]) -> dict[str, float] | None:
+    """Pearson korrelyatsiya koeffitsienti (ikkala qatorda ham mavjud juftlar bo'yicha)."""
+    juft = [(float(a), float(b)) for a, b in zip(x, y) if a is not None and b is not None]
+    n = len(juft)
+    if n < 3:
+        return None
+    mx = sum(a for a, _ in juft) / n
+    my = sum(b for _, b in juft) / n
+    sxx = sum((a - mx) ** 2 for a, _ in juft)
+    syy = sum((b - my) ** 2 for _, b in juft)
+    if sxx <= 0 or syy <= 0:
+        return None
+    sxy = sum((a - mx) * (b - my) for a, b in juft)
+    return {"r": sxy / math.sqrt(sxx * syy), "n": n}
+
+
+def taqqoslash(seriyalar: dict[str, dict[str, Any]],
+               chegara: float = ISITISH_CHEGARA_C,
+               epizod_chegara: float = 35.0) -> dict[str, Any]:
+    """Bir nechta retseptorni yonma-yon qo'yish + kunlik korrelyatsiya matritsasi.
+
+    `seriyalar` = {nom: {"times": [...], "qiymatlar": [...], "haroratlar": [...]}}
+    Har bir retseptor uchun: yillik/isitish/issiq o'rtacha, lift, isitish soati,
+    epizod kunlar (> `epizod_chegara`), maksimal kunlik qiymat.
+    Oxirida kunlik qatorlar bo'yicha Pearson `r` matritsasi (juftlik).
+    """
+    qatorlar: dict[str, dict[str, Any]] = {}
+    kunlik: dict[str, dict[str, float]] = {}
+    for nom, s in seriyalar.items():
+        t, v, h = list(s["times"]), list(s["qiymatlar"]), list(s["haroratlar"])
+        juft = [(a, b, c) for a, b, c in zip(t, v, h) if b is not None and c is not None]
+        isit = [b for _, b, c in juft if float(c) <= chegara]
+        issiq = [b for _, b, c in juft if float(c) > chegara]
+        ort = lambda L: (sum(L) / len(L)) if L else None  # noqa: E731
+        k = kunlik_ort([a for a, _, _ in juft], [b for _, b, _ in juft])
+        epizod = [x for x in k if x["ort"] > epizod_chegara]
+        qatorlar[nom] = {
+            "n": len(juft),
+            "yillik": ort([float(b) for _, b, _ in juft]),
+            "isitish": ort([float(x) for x in isit]),
+            "issiq": ort([float(x) for x in issiq]),
+            "n_isitish": len(isit),
+            "n_issiq": len(issiq),
+            "lift": (ort([float(x) for x in isit]) / ort([float(x) for x in issiq]))
+            if isit and issiq and ort([float(x) for x in issiq]) else None,
+            "epizod": len(epizod),
+            "maks_kun": max((x["ort"] for x in k), default=None),
+            "eng_ogir": sorted([(x["ort"], x["kun"]) for x in k], reverse=True)[:5],
+        }
+        kunlik[nom] = {x["kun"]: x["ort"] for x in k}
+
+    nomlar = list(seriyalar)
+    r_matritsa: dict[str, dict[str, float | None]] = {}
+    for i, a in enumerate(nomlar):
+        r_matritsa[a] = {}
+        for b in nomlar[i + 1:]:
+            umumiy = sorted(set(kunlik[a]) & set(kunlik[b]))
+            p = pearson([kunlik[a][k] for k in umumiy], [kunlik[b][k] for k in umumiy])
+            r_matritsa[a][b] = round(p["r"], 3) if p else None
+
+    return {"qatorlar": qatorlar, "r": r_matritsa, "kunlik": kunlik,
+            "chegara_C": chegara, "epizod_chegara": epizod_chegara}

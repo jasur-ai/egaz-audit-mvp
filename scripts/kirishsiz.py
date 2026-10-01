@@ -457,6 +457,73 @@ def cmd_retseptorlar(a) -> int:
     return 0
 
 
+def cmd_taqqos(a) -> int:
+    """Retseptorlarni yonma-yon qo'yish (R53)."""
+    from src.kirishsiz import mavsum as MV  # noqa: E402
+
+    seriyalar = {}
+    for spec in a.retseptor:
+        qism = spec.split(":")
+        if len(qism) != 4:
+            print("⚠️  format: nom:aq.csv:shamol.csv:havo.csv")
+            return 2
+        nom, paq, psh, phv = qism
+        aq, wd, hv = _rows(paq), _rows(psh), _rows(phv)
+        H = {r["vaqt"]: r["harorat_C"] for r in hv}
+        seriyalar[nom] = {"times": [r["vaqt"] for r in aq],
+                          "qiymatlar": [r.get(a.modda) for r in aq],
+                          "haroratlar": [H.get(r["vaqt"]) for r in aq]}
+    nat = MV.taqqoslash(seriyalar, a.chegara, a.epizod)
+    if a.json:
+        _print_json({k: v for k, v in nat.items() if k != "kunlik"})
+        return 0
+    print(f"RETSEPTORLAR — {a.modda} · isitish chegarasi {a.chegara:g} °C · epizod > {a.epizod:g}")
+    print(f"  {'retseptor':14}{'yillik':>8}{'isitish':>9}{'issiq':>8}{'lift':>7}{'soat_i':>8}{'epizod':>7}{'maks':>7}")
+    for nom, v in nat["qatorlar"].items():
+        print(f"  {nom:14}{v['yillik']:8.2f}{v['isitish']:9.2f}{v['issiq']:8.2f}"
+              f"{(v['lift'] or 0):7.2f}{v['n_isitish']:8}{v['epizod']:7}"
+              f"{(v['maks_kun'] or 0):7.1f}")
+    print("\n  Kunlik korrelyatsiya r (juftlik):")
+    for x, qator in nat["r"].items():
+        for y, r in qator.items():
+            print(f"    r({x}, {y}) = {r}")
+    return 0
+
+
+def cmd_isitish(a) -> int:
+    """Maishiy isitish hissasi — yoqilg'i asosidagi baho (R53)."""
+    from src.kirishsiz import isitish as IS  # noqa: E402
+
+    shamol, soat = None, a.soat
+    d = {"delta_pm": a.delta_pm, "delta_co": a.delta_co, "delta_sox": a.delta_sox}
+    if a.aq_fayl and a.havo_fayl:
+        aq, hv = _rows(a.aq_fayl), _rows(a.havo_fayl)
+        H = {r["vaqt"]: r["harorat_C"] for r in hv}
+        juft = [(r, H.get(r["vaqt"])) for r in aq if H.get(r["vaqt"]) is not None]
+        isit = [(r, t) for r, t in juft if float(t) <= a.chegara]
+        issiq = [(r, t) for r, t in juft if float(t) > a.chegara]
+        ort = lambda L, k: sum(float(r[k]) for r, _ in L) / len(L) if L else 0.0  # noqa: E731
+        d = {"delta_pm": ort(isit, "pm2_5_ug_m3") - ort(issiq, "pm2_5_ug_m3"),
+             "delta_co": ort(isit, "co_ug_m3") - ort(issiq, "co_ug_m3"),
+             "delta_sox": ort(isit, "so2_ug_m3") - ort(issiq, "so2_ug_m3")}
+        if soat is None:
+            soat = float(len(isit))
+    if a.shamol_fayl:
+        wd = _rows(a.shamol_fayl)
+        H = {r["vaqt"]: r["harorat_C"] for r in _rows(a.havo_fayl or a.shamol_fayl)} if a.havo_fayl else {}
+        shamol = [r.get("shamol_ms") for r in wd
+                  if not H or (H.get(r["vaqt"]) is not None and float(H[r["vaqt"]]) <= a.chegara)]
+    nat = IS.hisobot(aholi_ming=a.aholi, xususiy_ulush=a.xususiy, kishi_uy=a.kishi_uy,
+                     m3_uy=a.m3_uy, delta_pm=d["delta_pm"], delta_co=d["delta_co"],
+                     delta_sox=d["delta_sox"], soat=soat if soat else 2319.0,
+                     L_m=a.L_m, H_m=a.H_m, shamol=shamol)
+    if a.json:
+        _print_json({k: v for k, v in nat.items() if k != "sezgirlik"})
+        return 0
+    print(IS.matn(nat))
+    return 0
+
+
 def cmd_mavsum(a) -> int:
     """Mavsumiy tahlil: qamrov, isitish/issiq liftlari, epizod atributsiyasi (R50)."""
     from src.kirishsiz import mavsum as MV  # noqa: E402
@@ -595,6 +662,9 @@ def cmd_sorov(a) -> int:
     if a.kutish:
         _print_json(requests_gen.tracker_pending(a.tracker))
         return 0
+    if not a.tashkilot:
+        print("⚠️  --tashkilot kerak (yoki --kutish bilan holatni ko'rish)")
+        return 2
     r = requests_gen.build_request(a.tashkilot, a.tur, a.obyekt, a.sorovchi, a.aloqa, a.sana)
     path = a.out or os.path.join(ROOT, "data", "kirishsiz", f"sorov_{a.tur}.txt")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -706,6 +776,33 @@ def main() -> int:
     p.add_argument("--chegara-epizod", type=float, default=35.0, help="epizod chegarasi, µg/m³ (kunlik)")
     p.set_defaults(fn=cmd_mavsum)
 
+    p = sub.add_parser("taqqos", parents=[umumiy],
+                       help="retseptorlarni yonma-yon qo'yish (yillik/isitish lift + kunlik r)")
+    p.add_argument("--retseptor", action="append", required=True,
+                   help="nom:aq.csv:shamol.csv:havo.csv (bir necha marta)")
+    p.add_argument("--modda", default="pm2_5_ug_m3")
+    p.add_argument("--chegara", type=float, default=8.0)
+    p.add_argument("--epizod", type=float, default=35.0)
+    p.set_defaults(fn=cmd_taqqos)
+
+    p = sub.add_parser("isitish", parents=[umumiy],
+                       help="maishiy isitish hissasi — yoqilg'i asosidagi baho")
+    p.add_argument("--aq-fayl", help="berilsa ΔPM/ΔCO/ΔSO2 fayldan hisoblanadi")
+    p.add_argument("--shamol-fayl")
+    p.add_argument("--havo-fayl")
+    p.add_argument("--aholi", type=float, default=3164.0, help="aholi, ming kishi (Toshkent 01.10.2025)")
+    p.add_argument("--kishi-uy", dest="kishi_uy", type=float, default=3.8)
+    p.add_argument("--xususiy", type=float, default=0.352, help="xususiy uy ulushi (stat.uz 2023)")
+    p.add_argument("--m3", dest="m3_uy", type=float, default=2500.0, help="isitish uchun m³/uy/mavsum")
+    p.add_argument("--delta-pm", dest="delta_pm", type=float, default=10.24)
+    p.add_argument("--delta-co", dest="delta_co", type=float, default=238.05)
+    p.add_argument("--delta-sox", dest="delta_sox", type=float, default=5.57)
+    p.add_argument("--L", dest="L_m", type=float, default=20000.0)
+    p.add_argument("--H", dest="H_m", type=float, default=300.0)
+    p.add_argument("--soat", type=float, default=None, help="isitish soati (berilmasa fayldan)")
+    p.add_argument("--chegara", type=float, default=8.0, help="isitish mezoni, °C")
+    p.set_defaults(fn=cmd_isitish)
+
     p = sub.add_parser("benford", parents=[umumiy], help="Benford/dumaloq raqam skriningi")
     p.add_argument("--fayl")
     p.add_argument("--qiymatlar", default="")
@@ -737,7 +834,7 @@ def main() -> int:
     p.set_defaults(fn=cmd_transsect)
 
     p = sub.add_parser("sorov", parents=[umumiy], help="huquqiy talab (Aarhus) generatori")
-    p.add_argument("--tashkilot", required=True)
+    p.add_argument("--tashkilot")
     p.add_argument("--tur", default="olchov", choices=list(requests_gen.STANDART_SOROVLAR))
     p.add_argument("--obyekt", default="⟦obyekt nomi⟧")
     p.add_argument("--sorovchi", default="⟦F.I.Sh. / tadqiqot guruhi⟧")

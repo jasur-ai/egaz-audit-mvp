@@ -390,3 +390,26 @@ def test_tracker_add_load_pending(tmp_path):
 
 def test_tracker_empty_when_missing(tmp_path):
     assert requests_gen.tracker_load(str(tmp_path / "yoq.jsonl")) == []
+
+
+def test_sorov_yangi_turlari_va_topilmalar():
+    """R53: isitish-qattiq va gaz-isitish turlari + topilmalar bloki."""
+    for tur in ("isitish-qattiq", "gaz-isitish"):
+        assert tur in requests_gen.STANDART_SOROVLAR
+    r = requests_gen.build_request("Boshqarma", "isitish-qattiq", sana="2026-10-05")
+    assert "qattiq yoqilg'i" in r["matn"]
+    # topilmalar bloki standart holatda qo'shiladi va o'lchangan raqamlar ko'rinadi
+    assert "Tadqiqotning ochiq ma'lumotlarga asoslangan natijalari" in r["matn"]
+    assert "25,60" in r["matn"] and "398 g/GJ" in r["matn"]
+    assert len(requests_gen.TOPILMALAR) >= 5
+    assert r["muddat"]["javob_sana"] == "2026-10-20"
+
+
+def test_sorov_topilmalarsiz():
+    r = requests_gen.build_request("Boshqarma", "olchov", sana="2026-10-05", topilmalar=False)
+    assert "Tadqiqotning ochiq ma'lumotlarga asoslangan natijalari" not in r["matn"]
+    assert "Tadqiqotning ochiq ma'lumotlarga asoslangan natijalari" in R_bloki()
+
+
+def R_bloki():
+    return requests_gen.topilmalar_bloki()

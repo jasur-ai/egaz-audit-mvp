@@ -1,0 +1,30 @@
+O'zbekiston Respublikasi Ekologiya, atrof-muhitni muhofaza qilish va iqlim o'zgarishi vazirligi huzuridagi Ekologik nazorat inspeksiyasi rahbariga
+
+AXBOROT OCHISH TALABI
+(Konstitutsiyaning 49-moddasi, Aarhus konventsiyasining 4-moddasi va davlat organlari
+faoliyatining ochiqligi to'g'risidagi qonun asosida)
+
+Men, ⟦F.I.Sh. / tadqiqot guruhi⟧, Toshkent shimoli-sharqidagi sanoat zonasi obyekti bo'yicha atrof-muhit holatiga oid quyidagi
+ma'lumotlarni so'rayman:
+  1) Oxirgi 3 yilda o'tkazilgan inspeksiyalar dalolatnomalari va aniqlangan huquqbuzarliklar bo'yicha choralar
+  2) Mash'al/fakel qurilmalari ro'yxati va yonish rejimi (agar mavjud bo'lsa)
+
+Tadqiqotning ochiq ma'lumotlarga asoslangan natijalari (2026-yil oktabr holati):
+  1) Toshkent shahri (CAMS katagi, 2025-10-02 → 2026-10-01, 8 760 soat) bo'yicha PM2,5 o'rtachasi isitish mavsumida 25,60 µg/m³, issiq mavsumda 15,36 µg/m³ — farq 1,67×. Manba: Open-Meteo/CAMS havo sifati arxivi, 2026-10-01 da olindi.
+  2) Kunlik PM2,5 normadan (35 µg/m³) oshgan kunlar: isitish mavsumida 21/181, issiq mavsumda 0/183. Manba: o'sha manba, o'z hisobimiz.
+  3) Shu davrda NOx/SO2/CO ko'rsatkichlari ham ~2 barobar oshadi, PM2,5/PM10 nisbati 0,68 → 0,86 (nozik zarrachalar ulushi ortadi). Manba: o'sha manba, o'z hisobimiz.
+  4) Angren (4 km masofadagi IES) retseptorida isitish mavsumi ko'tarilishi **yo'q** (0,97×) va normadan oshgan kun **0** — ko'mir stansiyasi signali isitish mavsumida ham ustun emas. Manba: o'sha manba + GEM koordinatalari (Angren power station, exact).
+  5) Ohangaron/Olmaliq katagida 21 normadan oshgan kunning 3 tasi kuzatildi va uchalasi ham sement kombinati yo'nalishidan **tashqarida**. Manba: o'sha manba, o'z hisobimiz.
+  6) EMEP/EEA 2023 1.A.4.b.i bo'yicha: tabiiy gaz PM2,5 1,2 g/GJ, qattiq yoqilg'i 398 g/GJ — farq ~330×; shu sababli gaz isitish PM2,5 ortishini tushuntira olmaydi. Manba: EMEP/EEA Guidebook 2023, 1.A.4 Small combustion.
+  Shu sababli quyidagi ma'lumotlar so'ralmoqda — ular yuqoridagi farqni miqdoriy tushuntirish uchun yetishmayotgan yagona bo'g'in.
+
+Eslatma: so'ralayotgan ma'lumot davlat organlari tizimida mavjud bo'lgan rasmiy
+hujjat hisoblanadi; u savdo siri yoki shaxsga doir ma'lumotni oshkor qilmaydi.
+Qonunchilikka ko'ra murojaat 15 kun ichida ko'rib chiqilishi kerak; qo'shimcha
+o'rganish talab qilinsa, muddat bir oygacha uzaytirilishi mumkin (bunda sabab
+yozma xabar qilinishi kerak).
+
+Javobni quyidagi manzilga yuborishingizni so'rayman: ⟦telefon / e-pochta⟧
+
+Sana: 2026-10-05
+Imzo: ____________________ (⟦F.I.Sh. / tadqiqot guruhi⟧)
