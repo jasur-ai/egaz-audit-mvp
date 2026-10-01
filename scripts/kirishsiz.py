@@ -8,6 +8,8 @@
   python3 scripts/kirishsiz.py benford --qiymatlar 12.5,120,12.3,0.00456,7,45,310,2.2,88
   python3 scripts/kirishsiz.py orbita --kesim 0.001,0.002,0.0015 --shamol 3 --dx 3500
   python3 scripts/kirishsiz.py transsect --c 1e-6 --shamol 3 --sigma-z 20 --h 10
+  python3 scripts/kirishsiz.py ekran --kun 92 --shamol-fayl data/public/wind_era5_92kun.csv
+  python3 scripts/kirishsiz.py sektor --fayl data/public/aq_92kun.csv --shamol-fayl data/public/wind_era5_92kun.csv --m30 --modda pm2_5,pm10,no2
   python3 scripts/kirishsiz.py sorov --tashkilot "Ekologiya boshqarmasi" --tur olchov --tracker data/kirishsiz/sorovlar.jsonl
 """
 from __future__ import annotations
@@ -48,21 +50,26 @@ def cmd_list(a) -> int:
     return 0
 
 
-def cmd_ekran(a) -> int:
-    from scripts.fetch_public import fetch_open_meteo_aq, fetch_open_meteo_wind, _get  # noqa: E402
-    rec = fetch_open_meteo_aq(a.lat, a.lon, a.kun, a.out_csv)
-    rec_w = fetch_open_meteo_wind(a.lat, a.lon, a.kun, a.out_wind)
+def _rows(path: str) -> list:
     import csv as _csv
+    with open(os.path.join(ROOT, path), encoding="utf-8") as f:
+        return list(_csv.DictReader(f))
 
-    def _rows(path):
-        with open(os.path.join(ROOT, path), encoding="utf-8") as f:
-            return list(_csv.DictReader(f))
+
+def cmd_ekran(a) -> int:
+    from scripts.fetch_public import fetch_open_meteo_aq, fetch_open_meteo_wind  # noqa: E402
+    rec = fetch_open_meteo_aq(a.lat, a.lon, a.kun, a.out_csv)
+    if a.shamol_fayl:
+        rec_w = {"fayl": a.shamol_fayl, "manba": "fayl (berilgan shamol CSV)"}
+    else:
+        rec_w = fetch_open_meteo_wind(a.lat, a.lon, a.kun, a.out_wind)
 
     aq = _rows(rec["fayl"])
     wd = _rows(rec_w["fayl"])
     times = [r["vaqt"] for r in aq]
-    vals = [float(r["pm2_5_ug_m3"]) for r in aq]
-    winds = [float(r["shamol_yonalishi_grad"]) for r in wd]
+    vals = [r["pm2_5_ug_m3"] for r in aq]
+    wind_times = [r["vaqt"] for r in wd]
+    winds = [r["shamol_yonalishi_grad"] for r in wd]
 
     nomzodlar = []
     for spec in a.obyekt or []:
@@ -72,13 +79,17 @@ def cmd_ekran(a) -> int:
         except ValueError:
             print(f"⚠️  --obyekt formati nom:lat:lon bo'lishi kerak: {spec}")
 
-    dh = screener.dirty_hours(times, vals, winds, a.soatlik_norma)
+    juft = screener.dirty_hours_by_time(times, vals, wind_times, winds, a.soatlik_norma)
+    dh = juft["soatlar"]
     for h in dh:
         h["receptor_lat"], h["receptor_lon"] = a.lat, a.lon
 
     rep = screener.screen_report(times, vals, norm=a.norma,
                                  dirty_hours_wind=dh if nomzodlar else None,
                                  candidates=nomzodlar or None)
+    rep["soatlik_juftlash"] = {"oshgan_soat": juft["oshgan"], "shamoli_bor": len(dh),
+                               "shamol_yoq": juft["shamol_yoq"], "qamrov": round(juft["qamrov"], 3),
+                               "shamol_manbasi": rec_w.get("manba", "Open-Meteo shamol")}
     if a.json:
         _print_json(rep)
         return 0
@@ -91,6 +102,9 @@ def cmd_ekran(a) -> int:
         belgi = "⚠" if d["yaroqli"] and d["qiymat"] and d["qiymat"] > rep["norma"] else " "
         print(f"   {belgi} {d['kun']}  {d['qiymat'] if d['qiymat'] is not None else '—':>6}  "
               f"(qamrov {d['qamrov']:.0%})")
+    sj = rep["soatlik_juftlash"]
+    print(f"  Soatlik chegara {a.soatlik_norma:g} µg/m³: oshgan {sj['oshgan_soat']} soat · "
+          f"shamoli bor {sj['shamoli_bor']} ({sj['qamrov']:.0%}) · shamol yo'q {sj['shamol_yoq']}")
     if "atributsiya" in rep:
         at = rep["atributsiya"]
         print(f"\n  Nomzodlar ({at['soatlar']} oshgan soat bo'yicha):")
@@ -100,6 +114,66 @@ def cmd_ekran(a) -> int:
         if at["barobar_manba_ogohi"]:
             print("   ⚠ Bir nechta manba bir yo'nalishda — ajratish mumkin emas (isbot kuchi 2).")
     print(f"\n  Isbot kuchi: {rep['isbot_kuchi']} · isbotlanmaydi: {rep['nima_isbotlanmaydi']}")
+    return 0
+
+
+def cmd_sektor(a) -> int:
+    from src.kirishsiz import sector  # noqa: E402
+
+    aq = _rows(a.fayl) if a.fayl else _rows("data/public/aq_92kun.csv")
+    wd = _rows(a.shamol_fayl) if a.shamol_fayl else _rows("data/public/wind_era5_92kun.csv")
+    times = [r["vaqt"] for r in aq]
+    wind_times = [r["vaqt"] for r in wd]
+    wind_map = {t: screener.to_float(v) for t, v in zip(wind_times, [r["shamol_yonalishi_grad"] for r in wd])}
+    winds = [wind_map.get(t) for t in times]          # vaqt bo'yicha tekislangan shamol
+
+    nomzodlar = []
+    for spec in a.obyekt or []:
+        try:
+            nom, la, lo = spec.split(":")
+            nomzodlar.append({"nom": nom, "lat": float(la), "lon": float(lo)})
+        except ValueError:
+            print(f"⚠️  --obyekt formati nom:lat:lon bo'lishi kerak: {spec}")
+
+    markaz = a.markaz
+    if markaz is None and nomzodlar:
+        cs = sector.candidate_sector(a.lat, a.lon, nomzodlar, a.kenglik)
+        markaz = cs["sektorlar"][0]["markaz"]
+    if markaz is None:
+        markaz = 0.0
+
+    moddalar = [m.strip() for m in (a.modda or "pm2_5").split(",") if m.strip()]
+    kirish = {}
+    for m in moddalar:
+        ustun = {"pm2_5": "pm2_5_ug_m3", "pm10": "pm10_ug_m3", "no2": "no2_ug_m3",
+                 "so2": "so2_ug_m3", "co": "co_ug_m3"}.get(m)
+        if ustun is None or ustun not in (aq[0] if aq else {}):
+            print(f"⚠️  {m} ustuni faylda yo'q — o'tkazib yuborildi")
+            continue
+        kirish[m] = ([r[ustun] for r in aq], winds)
+
+    rep = sector.ko_p_modda(kirish, markaz, a.kenglik, a.kvantil)
+    gul = sector.wind_rose(winds)
+    if a.json:
+        _print_json({"sektor_tahlili": rep, "shamollanish_guli": gul})
+        return 0
+
+    print(f"SEKTOR TAHLILI — {a.fayl or 'data/public/aq_92kun.csv'} · shamol: {a.shamol_fayl or 'ERA5'}")
+    print(f"  Sektor markazi: {markaz:g}° (±{a.kenglik:g}°) · kvantil: yuqori {100 * (1 - a.kvantil):.0f}% soatlar")
+    print(f"  Shamollanish guli (top-3): " +
+          " · ".join(f"{x['sektor']} {x['ulush']:.0%}" for x in gul["eng_kop"]) + f" (n={gul['jami']})")
+    print()
+    print(f"  {'modda':<7}{'fon ulushi':>12}{'yuqori ulushi':>15}{'lift':>7}   xulosa")
+    print("  " + "-" * 74)
+    for m, r in rep["moddalar"].items():
+        if "xato" in r:
+            print(f"  {m:<7}{'—':>12}{'—':>15}{'—':>7}   {r['xato']}")
+            continue
+        lift = f"{r['lift']:.2f}" if r["lift"] is not None else "—"
+        print(f"  {m:<7}{r['fon_ulushi']:>12.3f}{r['yuqori_ulushi']:>15.3f}{lift:>7}   {r['xulosa']}")
+    if rep["eng_kuchli"]:
+        print(f"\n  Eng kuchli signal: {rep['eng_kuchli']['modda']} (lift {rep['eng_kuchli']['lift']})")
+    print(f"  Isbot kuchi: 2 · {rep['eslatma']}")
     return 0
 
 
@@ -239,6 +313,8 @@ def main() -> int:
     p.add_argument("--obyekt", action="append", help="nomzod: nom:lat:lon (bir necha marta)")
     p.add_argument("--out-csv", dest="out_csv", default=None)
     p.add_argument("--out-wind", dest="out_wind", default=None)
+    p.add_argument("--shamol-fayl", dest="shamol_fayl", default=None,
+                   help="shamol CSV (masalan ERA5 arxividan) — berilsa, API'dan olib kelinmaydi")
     p.set_defaults(fn=cmd_ekran)
 
     p = sub.add_parser("band", parents=[umumiy], help="pastdan yuqoriga oraliq hisobi")
@@ -295,6 +371,20 @@ def main() -> int:
     p.add_argument("--tracker", default=os.path.join(ROOT, "data", "kirishsiz", "sorovlar.jsonl"))
     p.add_argument("--kutish", action="store_true", help="javobsiz so'rovlar holati")
     p.set_defaults(fn=cmd_sorov)
+
+    p = sub.add_parser("sektor", parents=[umumiy],
+                       help="sektor tahlili: yuqori soatlarda shamol yo'nalishi boyitilishi (lift)")
+    p.add_argument("--fayl", default=None, help="havo sifati CSV (standart: data/public/aq_92kun.csv)")
+    p.add_argument("--shamol-fayl", dest="shamol_fayl", default=None,
+                   help="shamol CSV (standart: data/public/wind_era5_92kun.csv)")
+    p.add_argument("--markaz", type=float, default=None, help="sektor markazi, gradus (yo'q bo'lsa — nomzoddan)")
+    p.add_argument("--kenglik", type=float, default=45.0)
+    p.add_argument("--kvantil", type=float, default=0.90, help="yuqori soatlar chegarasi (0,90 = yuqori 10%%)")
+    p.add_argument("--modda", default="pm2_5", help="moddalar vergul bilan: pm2_5,pm10,no2,so2,co")
+    p.add_argument("--lat", type=float, default=41.311)
+    p.add_argument("--lon", type=float, default=69.240)
+    p.add_argument("--obyekt", action="append", help="nomzod: nom:lat:lon (sektor shundan hisoblanadi)")
+    p.set_defaults(fn=cmd_sektor)
 
     a = ap.parse_args()
     if getattr(a, "list", False) and not a.cmd:      # --list (yollar bilan bir xil)

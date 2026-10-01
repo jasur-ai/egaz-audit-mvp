@@ -145,6 +145,63 @@ def screen_report(
     return out
 
 
+def to_float(x) -> float | None:
+    """CSV/JSON qiymatini xavfsiz songa aylantirish: bo'sh satr, None, «—» → None.
+
+    Nima uchun kerak: ochiq API'lar (masalan Open-Meteo shamol) oynaning boshida bo'sh
+    qatorlar qaytarishi mumkin — bunday qatorlar **0 emas, «yo'q»** deb qaralishi shart,
+    aks holda atributsiya noto'g'ri hisoblanadi.
+    """
+    if x is None:
+        return None
+    if isinstance(x, (int, float)):
+        return float(x)
+    t = str(x).strip().replace(",", ".")
+    if t in ("", "-", "—", "nan", "NaN", "null", "None"):
+        return None
+    try:
+        return float(t)
+    except ValueError:
+        return None
+
+
+def dirty_hours_by_time(
+    aq_times: Iterable[str],
+    aq_values: Iterable[float | None],
+    wind_times: Iterable[str],
+    wind_values: Iterable[float | None],
+    norm_hourly: float,
+) -> dict[str, Any]:
+    """Normadan oshgan soatlarni shamol bilan **vaqt bo'yicha** juftlash.
+
+    Indeks bo'yicha juftlash xato: ikki fayl turli davrni qoplashi mumkin (masalan havo sifati
+    92 kun, shamol 66 kun) — u holda qiymatlar siljib ketadi. Shu sababli kalit — `vaqt`.
+
+    Qaytadi: `soatlar` (atributsiya uchun), `oshgan` (jami oshgan soat), `shamol_yoq`
+    (shamoli bo'lmagan oshgan soatlar), `qamrov` (shamoli bor oshgan soatlar ulushi).
+    """
+    wind_map = {t: to_float(v) for t, v in zip(wind_times, wind_values)}
+    soatlar: list[dict[str, Any]] = []
+    oshgan = 0
+    shamol_yoq = 0
+    for t, v in zip(aq_times, aq_values):
+        val = to_float(v)
+        if val is None or val <= norm_hourly:
+            continue
+        oshgan += 1
+        w = wind_map.get(t)
+        if w is None:
+            shamol_yoq += 1
+            continue
+        soatlar.append({"vaqt": t, "qiymat": val, "wind_from": w})
+    return {
+        "soatlar": soatlar,
+        "oshgan": oshgan,
+        "shamol_yoq": shamol_yoq,
+        "qamrov": (len(soatlar) / oshgan if oshgan else 0.0),
+    }
+
+
 def dirty_hours(times: Iterable[str], values: Iterable[float], wind_from: Iterable[float],
                 norm_hourly: float) -> list[dict[str, Any]]:
     """Soatlik norma oshgan soatlarni shamol yo'nalishi bilan juftlash (atributsiya uchun)."""

@@ -45,7 +45,7 @@ PATHS: list[dict[str, Any]] = [
         "isbot_kuchi": 2,
         "aniqlik": "soatlik model qatori; hujayra ~10–25 km (CAMS), shuning uchun **obyektga bog'lab bo'lmaydi**",
         "kadans": "kunlik (5 kun prognoz + 92 kun tarix)",
-        "kod": "kirishsiz.ekran · scripts/fetch_public.py --source open-meteo-aq",
+        "kod": "scripts/kirishsiz.py (ekran) · scripts/fetch_public.py --source open-meteo-aq",
         "cheklov": "Model mahsuloti (stansiya emas): komponent ulushi ~±30–50%. Faqat «hududda muammo bor» deydi, "
                    "«kim aybdor» degan savolga javob bermaydi.",
     },
@@ -64,7 +64,7 @@ PATHS: list[dict[str, Any]] = [
         "isbot_kuchi": 2,
         "aniqlik": "burchak ±10–20°, masofa ±50 m; shamol 10 m balandlikda (mo'ri 40+ m) — siljish bor",
         "kadans": "kunlik",
-        "kod": "kirishsiz.screener.candidate_sources",
+        "kod": "kirishsiz.screener.attribute_hours · kirishsiz.sector.directional_enrichment",
         "cheklov": "Bir nechta manba bir yo'nalishda bo'lsa ajratilmaydi — «nomzod», «aybdor» emas.",
     },
     {
