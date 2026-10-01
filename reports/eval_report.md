@@ -1,7 +1,7 @@
 # S6 — Baholash hisoboti (avtomatik)
 
 **Yozuvlar:** 50,600 (train 41,400 / test 9,200) · **injection:** 15% · **seed:** 42
-**Feature:** 33 ta (8 guruh) · **Quvur vaqti:** 22.1 s
+**Feature:** 33 ta (8 guruh) · **Quvur vaqti:** 27.5 s
 
 ## Asosiy natijalar (test = 2025Q3–2026Q2)
 
