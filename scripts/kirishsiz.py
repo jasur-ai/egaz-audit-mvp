@@ -457,6 +457,69 @@ def cmd_retseptorlar(a) -> int:
     return 0
 
 
+def cmd_mavsum(a) -> int:
+    """Mavsumiy tahlil: qamrov, isitish/issiq liftlari, epizod atributsiyasi (R50)."""
+    from src.kirishsiz import mavsum as MV  # noqa: E402
+
+    aq = _rows(a.fayl)
+    wd = _rows(a.shamol_fayl)
+    hv = _rows(a.havo_fayl)
+    wmap = {r["vaqt"]: r["shamol_yonalishi_grad"] for r in wd}
+    umap = {r["vaqt"]: r.get("shamol_ms") for r in wd}
+    hmap = {r["vaqt"]: r["harorat_C"] for r in hv}
+    times = [r["vaqt"] for r in aq]
+    winds = [wmap.get(t) for t in times]
+    harorat = [hmap.get(t) for t in times]
+    tezlik = [umap.get(t) for t in times]
+
+    q = MV.qamrov(times, harorat, a.chegara)
+    ustunlar = {k: [r[k] for r in aq] for k in a.modda.split(",") if k.strip() and k.strip() in (aq[0] if aq else {})}
+    ml = MV.mavsumiy_lift(ustunlar, winds, harorat, a.markaz, a.kenglik, a.chegara)
+    ep = MV.epizod_atributsiya(times, [r[a.epizod_modda] for r in aq], winds, harorat,
+                               a.markaz, a.kenglik, a.chegara_epizod, tezliklar=tezlik)
+    oylik_h = MV.oylik_bolish(times, harorat)
+    oylik_p = MV.oylik_bolish(times, [r[a.epizod_modda] for r in aq])
+
+    if a.json:
+        _print_json({"qamrov": q, "mavsumiy_lift": ml, "epizod": ep,
+                     "oylik_harorat": {k: round(sum(v) / len(v), 1) for k, v in oylik_h.items()},
+                     "oylik_konsentratsiya": {k: round(sum(v) / len(v), 2) for k, v in oylik_p.items()}})
+        return 0
+
+    print(f"MAVSUMIY TAHLIL — {a.fayl} · chegara {a.chegara:g} °C · sektor {a.markaz:g}° ±{a.kenglik:g}°")
+    print(f"  Soatlar {q['jami_soat']} · **isitish {q['isitish_soat']} "
+          f"({q['isitish_ulush_foiz']}%)** · issiq {q['issiq_soat']}")
+    print(f"  Oylik (harorat / {a.epizod_modda}):")
+    for oy in sorted(oylik_h):
+        th = oylik_h[oy]
+        tp = oylik_p.get(oy, [])
+        belgi = " 🔥" if sum(th) / len(th) <= a.chegara else ""
+        print(f"    {oy}: {sum(th)/len(th):6.1f} °C (min {min(th):5.1f}) · "
+              f"{sum(tp)/len(tp):5.2f}{belgi}" if tp else f"    {oy}: {sum(th)/len(th):6.1f} °C")
+    print(f"\n  SEKTOR LIFTI — isitish vs issiq:")
+    print(f"    {'modda':16}{'isitish':>10}{'n':>7}{'issiq':>10}{'n':>7}")
+    for m, v in ml["moddalar"].items():
+        i, s2 = v["isitish"], v["issiq"]
+        i_lift = i.get("lift", "—") if "lift" in i else "—"
+        s_lift = s2.get("lift", "—") if "lift" in s2 else "—"
+        print(f"    {m:16}{str(i_lift):>10}{i.get('n_sektor', 0):>7}{str(s_lift):>10}{s2.get('n_sektor', 0):>7}")
+    print(f"\n  EPIZODLAR (kunlik {a.epizod_modda} > {a.chegara_epizod:g}): {ep['jami']}")
+    print(f"    {ep['xulosa']}")
+    print(f"    toifalar: {ep['hisob']}")
+    print(f"    {'kun':12}{'o\u2019rt':>7}{'harorat':>9}{'shamol':>8}{'sektor':>8}  toifa")
+    for k in sorted(ep["kunlar"], key=lambda x: -x["ort_pm"])[:12]:
+        print(f"    {k['kun']:12}{k['ort_pm']:>7.1f}{k['ort_harorat']:>9.1f}"
+              f"{k['ort_shamol_ms'] if k['ort_shamol_ms'] is not None else float('nan'):>8.1f}"
+              f"{(k['sektor_ulush'] or 0):>8.0%}  {k['toifa']}")
+    if len(ep["kunlar"]) > 12:
+        print(f"    … yana {len(ep['kunlar']) - 12} kun (--json bilan to'liq)")
+    if q["isitish_soat"] == 0:
+        print("\n  ⚠️  Oynada isitish soati yo'q — isitish hissasi **baholanmaydi**.")
+    print("\n  Izoh: yo'nalish — ehtimoliy manba sektori; epizodlarning bir qismi shahar miqyosidagi "
+          "manbalar (isitish, inversiya) bilan bog'liq bo'lishi mumkin.")
+    return 0
+
+
 def cmd_benford(a) -> int:
     if a.fayl:
         vals = []
@@ -629,6 +692,19 @@ def main() -> int:
                        help="retseptorlar reyestri — shahar nuqtalari bo'yicha alohida ekranlar")
     p.add_argument("--radius", type=float, default=30.0, help="yaqin obyektlar radiusi, km")
     p.set_defaults(fn=cmd_retseptorlar)
+
+    p = sub.add_parser("mavsum", parents=[umumiy],
+                       help="mavsumiy tahlil: isitish/issiq liftlari va epizod atributsiyasi")
+    p.add_argument("--fayl", default="data/public/aq_365kun.csv", help="havo sifati fayli")
+    p.add_argument("--shamol-fayl", default="data/public/wind_era5_365kun.csv", help="shamol fayli")
+    p.add_argument("--havo-fayl", default="data/public/havo_era5_365kun.csv", help="harorat fayli")
+    p.add_argument("--modda", default="pm2_5_ug_m3,no2_ug_m3,pm10_ug_m3", help="lift uchun ustunlar")
+    p.add_argument("--epizod-modda", default="pm2_5_ug_m3", help="epizod atributsiyasi uchun ustun")
+    p.add_argument("--markaz", type=float, default=54.9, help="manba azimuti (IES 54,9°)")
+    p.add_argument("--kenglik", type=float, default=45.0, help="sektor yarim kengligi")
+    p.add_argument("--chegara", type=float, default=8.0, help="isitish mezoni, °C")
+    p.add_argument("--chegara-epizod", type=float, default=35.0, help="epizod chegarasi, µg/m³ (kunlik)")
+    p.set_defaults(fn=cmd_mavsum)
 
     p = sub.add_parser("benford", parents=[umumiy], help="Benford/dumaloq raqam skriningi")
     p.add_argument("--fayl")

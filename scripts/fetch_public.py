@@ -40,6 +40,7 @@ LITSENZIYA = {
     "open-meteo-archive": "CC-BY-4.0 (Open-Meteo Archive API)",
     "open-meteo-archive-havo": "CC-BY-4.0 (Open-Meteo Archive API; ECMWF/ERA5)",
     "open-meteo-aq-qoshimcha": "CC-BY-4.0 (Open-Meteo; CAMS global)",
+    "open-meteo-aq-tarix": "CC-BY-4.0 (Open-Meteo; CAMS tarixi 2022 dan)",
     "firms": "NASA FIRMS — ochiq (manba ko'rsatiladi)",
     "openaq": "CC-BY-4.0 (OpenAQ)",
     "carbon-mapper": "Carbon Mapper ochiq litsenziyasi (plume ma'lumotlari CC-BY-NC-SA bo'lishi mumkin)",
@@ -83,6 +84,14 @@ def url_open_meteo_aq_qoshimcha(lat: float, lon: float, kun: int) -> str:
             f"?latitude={lat}&longitude={lon}"
             "&hourly=pm2_5,pm10,dust,aerosol_optical_depth"
             "&timezone=Asia%2FTashkent&past_days={kun}&forecast_days=0".format(kun=kun))
+
+
+def url_open_meteo_aq_tarix(lat: float, lon: float, boshlanish: str, tugash: str) -> str:
+    """CAMS tarixi (2022 dan) — A-qatlam oynasini orqaga (o'tgan isitish mavsumiga) uzaytirish uchun."""
+    return ("https://air-quality-api.open-meteo.com/v1/air-quality"
+            f"?latitude={lat}&longitude={lon}"
+            "&hourly=pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide"
+            f"&start_date={boshlanish}&end_date={tugash}&timezone=Asia%2FTashkent")
 
 
 def url_firms(bbox: str, kun: int) -> str:
@@ -204,6 +213,18 @@ def fetch_open_meteo_aq_qoshimcha(lat: float, lon: float, kun: int, out: str | N
     return manifest_add("open-meteo-aq-qoshimcha", url, path, len(rows), "kerak emas")
 
 
+def fetch_open_meteo_aq_tarix(lat: float, lon: float, boshlanish: str, tugash: str,
+                              out: str | None) -> dict:
+    url = url_open_meteo_aq_tarix(lat, lon, boshlanish, tugash)
+    d = json.loads(_get(url, timeout=90).decode("utf-8"))
+    h = d["hourly"]
+    rows = [[t, h["pm2_5"][i], h["pm10"][i], h["nitrogen_dioxide"][i],
+             h["sulphur_dioxide"][i], h["carbon_monoxide"][i]] for i, t in enumerate(h["time"])]
+    path = out or os.path.join(OUTDIR, f"aq-tarix_{lat}_{lon}_{boshlanish}_{tugash}.csv")
+    save_csv(path, ["vaqt", "pm2_5_ug_m3", "pm10_ug_m3", "no2_ug_m3", "so2_ug_m3", "co_ug_m3"], rows)
+    return manifest_add("open-meteo-aq-tarix", url, path, len(rows), "kerak emas")
+
+
 def fetch_firms(bbox: str, kun: int, out: str | None) -> dict:
     url = url_firms(bbox, kun)
     matn = _get(url).decode("utf-8", errors="replace")
@@ -262,7 +283,7 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="manbalar mavjudligini tekshirish")
     ap.add_argument("--source", choices=["open-meteo-aq", "open-meteo-wind", "open-meteo-archive",
                                          "open-meteo-archive-havo", "open-meteo-aq-qoshimcha",
-                                         "firms", "openaq"])
+                                         "open-meteo-aq-tarix", "firms", "openaq"])
     ap.add_argument("--lat", type=float, default=41.311)
     ap.add_argument("--lon", type=float, default=69.240)
     ap.add_argument("--kun", type=int, default=7)
@@ -287,6 +308,8 @@ def main() -> int:
         rec = fetch_open_meteo_archive_havo(a.lat, a.lon, a.boshlanish, a.tugash, a.out)
     elif a.source == "open-meteo-aq-qoshimcha":
         rec = fetch_open_meteo_aq_qoshimcha(a.lat, a.lon, a.kun, a.out)
+    elif a.source == "open-meteo-aq-tarix":
+        rec = fetch_open_meteo_aq_tarix(a.lat, a.lon, a.boshlanish, a.tugash, a.out)
     elif a.source == "firms":
         rec = fetch_firms(a.bbox, a.kun, a.out)
     else:

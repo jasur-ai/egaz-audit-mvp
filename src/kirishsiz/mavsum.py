@@ -16,6 +16,7 @@ Nima isbotlanmaydi: 180 kunlik oyna issiq mavsum — isitish hissasi **baholanma
 """
 from __future__ import annotations
 
+import math
 from typing import Any, Iterable
 
 from .plume import angle_diff
@@ -133,3 +134,84 @@ def reja(qamrov_natija: dict[str, Any], maqsad_oylar: Iterable[str] = ("2026-10"
             "qadam": "`fetch_public.py --source open-meteo-aq --kun <N>` va ERA5 oynasi "
                      "yangi sanalar bilan qayta olinadi; keyin `sektor` va `mavsum` qayta ishlanadi",
             "eslatma": "rasmiy isitish mavsumi sanalari hokimiyat qarori bilan — hujjatda ko'rsatiladi"}
+
+def o_rtacha_yonalish(yonalishlar: Iterable) -> float | None:
+    """Yo'nalishlarning vektor o'rtachasi (aylana bo'yicha, 0–360°)."""
+    sx = sy = 0.0
+    n = 0
+    for y in yonalishlar:
+        yy = to_float(y)
+        if yy is None:
+            continue
+        sx += math.sin(math.radians(yy))
+        sy += math.cos(math.radians(yy))
+        n += 1
+    if not n or (sx == 0 and sy == 0):
+        return None
+    d = math.degrees(math.atan2(sx, sy)) % 360
+    if d >= 359.95:          # suzuvchi nuqta: −0,0001° → 359,9999° → 0°
+        d = 0.0
+    return round(d, 1)
+
+
+def epizod_atributsiya(times: Iterable[str], qiymatlar: Iterable, winds: Iterable,
+                       haroratlar: Iterable, markaz: float, kenglik: float = 45.0,
+                       chegara: float = 35.0, kamida_soat: int = 12,
+                       tezliklar: Iterable | None = None) -> dict[str, Any]:
+    """**Epizodlarni yo'nalish bo'yicha atributsiya qilish** (R50, isitish mavsumi).
+
+    Har bir «normadan oshgan kun» uchun: o'sha kun shamolining qanchasi manba sektoridan (±kenglik)
+    kelgan, o'rtacha yo'nalish, harorat va shamol tezligi. Shu asosda kun **uch toifaga** bo'linadi:
+
+      • `sektor_ustun` — soatlarning ≥50% sektordan → manba hissasi ehtimoli katta;
+      • `aralash` — 20–50% → qisman;
+      • `sektordan_tashqarida` — <20% → **manba sektori bu kunni tushuntirmaydi**.
+    """
+    t = [str(x)[:10] for x in times]
+    yig: dict[str, dict[str, list]] = {}
+    for i, kun in enumerate(t):
+        q = to_float(qiymatlar[i]) if i < len(list(qiymatlar)) else None
+        savat = yig.setdefault(kun, {"v": [], "w": [], "h": [], "u": []})
+        if q is None:
+            continue
+        savat["v"].append(q)
+        w = to_float(winds[i]) if i < len(list(winds)) else None
+        if w is not None:
+            savat["w"].append(w)
+        h = to_float(haroratlar[i]) if i < len(list(haroratlar)) else None
+        if h is not None:
+            savat["h"].append(h)
+        if tezliklar is not None:
+            u = to_float(tezliklar[i]) if i < len(list(tezliklar)) else None
+            if u is not None:
+                savat["u"].append(u)
+
+    kunlar: list[dict[str, Any]] = []
+    for kun, s in sorted(yig.items()):
+        if len(s["v"]) < kamida_soat:
+            continue
+        ort = sum(s["v"]) / len(s["v"])
+        if ort <= chegara:
+            continue
+        ulush = (sum(1 for w in s["w"] if angle_diff(w, markaz) <= kenglik) / len(s["w"])) if s["w"] else None
+        if ulush is None:
+            toifa = "yo'nalish_yo_q"
+        elif ulush >= 0.5:
+            toifa = "sektor_ustun"
+        elif ulush >= 0.2:
+            toifa = "aralash"
+        else:
+            toifa = "sektordan_tashqarida"
+        kunlar.append({"kun": kun, "ort_pm": round(ort, 2), "soat": len(s["v"]),
+                       "sektor_ulush": round(ulush, 3) if ulush is not None else None,
+                       "ort_yonalish": o_rtacha_yonalish(s["w"]),
+                       "ort_harorat": round(sum(s["h"]) / len(s["h"]), 1) if s["h"] else None,
+                       "ort_shamol_ms": round(sum(s["u"]) / len(s["u"]), 2) if s["u"] else None,
+                       "toifa": toifa})
+    hisob = {k: sum(1 for x in kunlar if x["toifa"] == k)
+             for k in ("sektor_ustun", "aralash", "sektordan_tashqarida", "yo'nalish_yo_q")}
+    return {"chegara": chegara, "markaz": markaz, "kenglik": kenglik, "kunlar": kunlar,
+            "jami": len(kunlar), "hisob": hisob,
+            "xulosa": (f"{len(kunlar)} epizoddan {hisob['sektor_ustun']} tasida shamol asosan manba "
+                       f"sektoridan; {hisob['sektordan_tashqarida']} tasida esa **undan emas**") if kunlar
+            else "normadan oshgan kun yo'q"}

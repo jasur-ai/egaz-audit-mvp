@@ -99,3 +99,54 @@ def test_reja_allaqachon_bor():
 def test_chegara_konstantasi():
     assert M.ISITISH_CHEGARA_C == 8.0
     assert 10 in M.ISITISH_OYLARI and 7 not in M.ISITISH_OYLARI
+
+# ---------------------------------------------------------------- epizod atributsiyasi
+
+
+def test_ortacha_yonalish_aylana_boyicha():
+    # 350° va 10° → o'rtacha 0° (360° emas!)
+    assert M.o_rtacha_yonalish([350.0, 10.0]) == pytest.approx(0.0, abs=0.1)
+    assert M.o_rtacha_yonalish([90.0, 90.0]) == pytest.approx(90.0, abs=0.1)
+    assert M.o_rtacha_yonalish([None, ""]) is None
+
+
+def test_epizod_atributsiya_uch_toifa():
+    # 3 kun: (a) sektor ustun, (b) aralash, (c) sektordan tashqarida
+    vaqt, qiymat, shamol, harorat = [], [], [], []
+    for i in range(24):
+        vaqt.append(f"2025-12-01T{i:02d}:00"); qiymat.append(50.0); shamol.append(55.0); harorat.append(2.0)
+    for i in range(24):
+        vaqt.append(f"2025-12-02T{i:02d}:00")
+        qiymat.append(50.0)
+        shamol.append(55.0 if i % 3 == 0 else 180.0)   # 33% sektorda
+        harorat.append(2.0)
+    for i in range(24):
+        vaqt.append(f"2025-12-03T{i:02d}:00"); qiymat.append(50.0); shamol.append(200.0); harorat.append(2.0)
+    r = M.epizod_atributsiya(vaqt, qiymat, shamol, harorat, 54.9, 45.0, 35.0)
+    assert r["jami"] == 3
+    assert r["hisob"]["sektor_ustun"] == 1
+    assert r["hisob"]["aralash"] == 1
+    assert r["hisob"]["sektordan_tashqarida"] == 1
+    assert "1 tasida" in r["xulosa"]
+
+
+def test_epizod_atributsiya_chegaradan_past_kunlar_tashlanadi():
+    vaqt = [f"2025-12-01T{i:02d}:00" for i in range(24)]
+    r = M.epizod_atributsiya(vaqt, [10.0] * 24, [55.0] * 24, [2.0] * 24, 54.9, 45.0, 35.0)
+    assert r["jami"] == 0 and "yo'q" in r["xulosa"]
+
+
+def test_epizod_atributsiya_qisqa_kun_hisobga_olinmaydi():
+    vaqt = [f"2025-12-01T{i:02d}:00" for i in range(5)]
+    r = M.epizod_atributsiya(vaqt, [50.0] * 5, [55.0] * 5, [2.0] * 5, 54.9, 45.0, 35.0, kamida_soat=12)
+    assert r["jami"] == 0
+
+
+def test_epizod_atributsiya_kun_maydonlari():
+    vaqt = [f"2025-12-01T{i:02d}:00" for i in range(24)]
+    r = M.epizod_atributsiya(vaqt, [40.0] * 24, [55.0] * 24, [-3.0] * 24, 54.9, 45.0, 35.0)
+    k = r["kunlar"][0]
+    assert k["ort_pm"] == pytest.approx(40.0)
+    assert k["ort_harorat"] == pytest.approx(-3.0)
+    assert k["sektor_ulush"] == pytest.approx(1.0)
+    assert k["toifa"] == "sektor_ustun"
