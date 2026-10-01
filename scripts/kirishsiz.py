@@ -8,8 +8,9 @@
   python3 scripts/kirishsiz.py benford --qiymatlar 12.5,120,12.3,0.00456,7,45,310,2.2,88
   python3 scripts/kirishsiz.py orbita --kesim 0.001,0.002,0.0015 --shamol 3 --dx 3500
   python3 scripts/kirishsiz.py transsect --c 1e-6 --shamol 3 --sigma-z 20 --h 10
-  python3 scripts/kirishsiz.py ekran --kun 92 --shamol-fayl data/public/wind_era5_92kun.csv
-  python3 scripts/kirishsiz.py sektor --fayl data/public/aq_92kun.csv --shamol-fayl data/public/wind_era5_92kun.csv --m30 --modda pm2_5,pm10,no2
+  python3 scripts/kirishsiz.py ekran --kun 180 --shamol-fayl data/public/wind_era5_180kun.csv
+  python3 scripts/kirishsiz.py nomzodlar --radius 30
+  python3 scripts/kirishsiz.py sektor --haqiqiy --radius 30 --modda pm2_5,no2,so2
   python3 scripts/kirishsiz.py sorov --tashkilot "Ekologiya boshqarmasi" --tur olchov --tracker data/kirishsiz/sorovlar.jsonl
 """
 from __future__ import annotations
@@ -120,60 +121,105 @@ def cmd_ekran(a) -> int:
 def cmd_sektor(a) -> int:
     from src.kirishsiz import sector  # noqa: E402
 
-    aq = _rows(a.fayl) if a.fayl else _rows("data/public/aq_92kun.csv")
-    wd = _rows(a.shamol_fayl) if a.shamol_fayl else _rows("data/public/wind_era5_92kun.csv")
+    aq = _rows(a.fayl) if a.fayl else _rows("data/public/aq_180kun.csv")
+    wd = _rows(a.shamol_fayl) if a.shamol_fayl else _rows("data/public/wind_era5_180kun.csv")
     times = [r["vaqt"] for r in aq]
-    wind_times = [r["vaqt"] for r in wd]
-    wind_map = {t: screener.to_float(v) for t, v in zip(wind_times, [r["shamol_yonalishi_grad"] for r in wd])}
+    wind_map = {r["vaqt"]: screener.to_float(r["shamol_yonalishi_grad"]) for r in wd}
     winds = [wind_map.get(t) for t in times]          # vaqt bo'yicha tekislangan shamol
 
-    nomzodlar = []
+    # --- sektorlar ro'yxati: haqiqiy reyestr yoki qo'lda berilgan nuqtalar
+    sektorlar = []
+    if a.haqiqiy:
+        from src.kirishsiz import facilities as F  # noqa: E402
+        for c in F.from_receptor(a.lat, a.lon):
+            if a.radius is not None and c["masofa_km"] > a.radius:
+                continue
+            sektorlar.append({"nom": c["nom"], "markaz": c["azimut"], "masofa_km": c["masofa_km"],
+                              "tur": c["tur"]})
     for spec in a.obyekt or []:
         try:
             nom, la, lo = spec.split(":")
-            nomzodlar.append({"nom": nom, "lat": float(la), "lon": float(lo)})
+            from src.kirishsiz.plume import bearing_deg, haversine_m  # noqa: E402
+            sektorlar.append({"nom": nom, "markaz": round(bearing_deg(a.lat, a.lon, float(la), float(lo)), 1),
+                              "masofa_km": round(haversine_m(a.lat, a.lon, float(la), float(lo)) / 1000.0, 2),
+                              "tur": "qo'lda"})
         except ValueError:
             print(f"⚠️  --obyekt formati nom:lat:lon bo'lishi kerak: {spec}")
 
-    markaz = a.markaz
-    if markaz is None and nomzodlar:
-        cs = sector.candidate_sector(a.lat, a.lon, nomzodlar, a.kenglik)
-        markaz = cs["sektorlar"][0]["markaz"]
-    if markaz is None:
-        markaz = 0.0
-
     moddalar = [m.strip() for m in (a.modda or "pm2_5").split(",") if m.strip()]
-    kirish = {}
+    USTUN = {"pm2_5": "pm2_5_ug_m3", "pm10": "pm10_ug_m3", "no2": "no2_ug_m3",
+             "so2": "so2_ug_m3", "co": "co_ug_m3"}
+    seriyalar = {}
     for m in moddalar:
-        ustun = {"pm2_5": "pm2_5_ug_m3", "pm10": "pm10_ug_m3", "no2": "no2_ug_m3",
-                 "so2": "so2_ug_m3", "co": "co_ug_m3"}.get(m)
-        if ustun is None or ustun not in (aq[0] if aq else {}):
+        u = USTUN.get(m)
+        if u is None or u not in (aq[0] if aq else {}):
             print(f"⚠️  {m} ustuni faylda yo'q — o'tkazib yuborildi")
             continue
-        kirish[m] = ([r[ustun] for r in aq], winds)
+        seriyalar[m] = [r[u] for r in aq]
 
-    rep = sector.ko_p_modda(kirish, markaz, a.kenglik, a.kvantil)
     gul = sector.wind_rose(winds)
+    natijalar = []
+    for sk in sektorlar:
+        qator = {"sektor": sk, "moddalar": {}}
+        for m, seriya in seriyalar.items():
+            qator["moddalar"][m] = sector.directional_enrichment(seriya, winds, sk["markaz"],
+                                                                 a.kenglik, a.kvantil)
+        natijalar.append(qator)
+
     if a.json:
-        _print_json({"sektor_tahlili": rep, "shamollanish_guli": gul})
+        _print_json({"shamollanish_guli": gul, "natijalar": natijalar})
         return 0
 
-    print(f"SEKTOR TAHLILI — {a.fayl or 'data/public/aq_92kun.csv'} · shamol: {a.shamol_fayl or 'ERA5'}")
-    print(f"  Sektor markazi: {markaz:g}° (±{a.kenglik:g}°) · kvantil: yuqori {100 * (1 - a.kvantil):.0f}% soatlar")
-    print(f"  Shamollanish guli (top-3): " +
+    print(f"SEKTOR TAHLILI — {a.fayl or 'data/public/aq_180kun.csv'} · shamol: {a.shamol_fayl or 'ERA5'}")
+    print(f"  Soatlar: {len(times)} · shamol qamrovi: {sum(1 for w in winds if w is not None)} · "
+          f"kvantil: yuqori {100 * (1 - a.kvantil):.0f}% · kenglik ±{a.kenglik:g}°")
+    print("  Shamollanish guli (top-3): " +
           " · ".join(f"{x['sektor']} {x['ulush']:.0%}" for x in gul["eng_kop"]) + f" (n={gul['jami']})")
     print()
-    print(f"  {'modda':<7}{'fon ulushi':>12}{'yuqori ulushi':>15}{'lift':>7}   xulosa")
-    print("  " + "-" * 74)
-    for m, r in rep["moddalar"].items():
-        if "xato" in r:
-            print(f"  {m:<7}{'—':>12}{'—':>15}{'—':>7}   {r['xato']}")
-            continue
-        lift = f"{r['lift']:.2f}" if r["lift"] is not None else "—"
-        print(f"  {m:<7}{r['fon_ulushi']:>12.3f}{r['yuqori_ulushi']:>15.3f}{lift:>7}   {r['xulosa']}")
-    if rep["eng_kuchli"]:
-        print(f"\n  Eng kuchli signal: {rep['eng_kuchli']['modda']} (lift {rep['eng_kuchli']['lift']})")
-    print(f"  Isbot kuchi: 2 · {rep['eslatma']}")
+    sarlavha = f"  {'sektor (obyekt)':<44}{'masofa':>8}" + "".join(f"{m:>9}" for m in seriyalar)
+    print(sarlavha)
+    print("  " + "-" * (len(sarlavha) - 2))
+    for q in natijalar:
+        sk = q["sektor"]
+        qator = f"  {sk['nom'][:42]:<44}{sk['masofa_km']:>7.1f} "
+        for m in seriyalar:
+            r = q["moddalar"][m]
+            lift = r.get("lift")
+            belgi = ""
+            if lift is not None:
+                belgi = "*" if lift >= 1.5 else ("~" if lift >= 1.15 else " ")
+            qator += f"{('%.2f%s' % (lift, belgi)) if lift is not None else '—':>9}"
+        print(qator)
+    print("\n  Izoh: * lift ≥ 1,5 (signal) · ~ 1,15–1,5 (kuchsiz) · bo'sh — signal yo'q (lift < 1,15)")
+    if a.haqiqiy:
+        from src.kirishsiz import facilities as F  # noqa: E402
+        print("  Ajratilmaydigan yo'nalishlar (shamol bilan ajratib bo'lmaydi):")
+        for g in F.sektor_guruhlari(a.lat, a.lon, kenglik=15):
+            if g["ajratilmaydi"]:
+                print(f"   • {g['markaz']:>5.1f}° — " + " + ".join(x[:34] for x in g["azolar"]))
+    print(f"\n  Isbot kuchi: 2 · {sector.ko_p_modda({}, 0)['eslatma']}")
+    return 0
+
+
+def cmd_nomzodlar(a) -> int:
+    from src.kirishsiz import facilities as F  # noqa: E402
+
+    rows = F.from_receptor(a.lat, a.lon)
+    if a.radius is not None:
+        rows = [r for r in rows if r["masofa_km"] <= a.radius]
+    if a.json:
+        _print_json({"receptor": {"lat": a.lat, "lon": a.lon}, "radius_km": a.radius, "obyektlar": rows})
+        return 0
+
+    print(f"NOMZODLAR REYESTRI — receptor {a.lat:.3f}/{a.lon:.3f} · radius {a.radius:g} km · "
+          f"manba: data/public/nomzodlar_uz.json")
+    print(f"  {'obyekt':<46}{'turi':<14}{'azimut':>8}{'masofa':>9}  holat")
+    print("  " + "-" * 88)
+    for r in rows:
+        holat = "radiusda ✅" if r["radiusda"] else "radiusdan tashqarida ⤴"
+        print(f"  {r['nom'][:44]:<46}{r['tur']:<14}{r['azimut']:>7.1f}°{r['masofa_km']:>8.2f} km  {holat}")
+    print("\n  Har yozuvda koordinata manbasi (URL) va sana bor — `--json` bilan ko'rinadi.")
+    print("  Eslatma: reyestrda bo'lish «ifloslantiruvchi» degani emas; yo'qligi ham «toza» degani emas.")
     return 0
 
 
@@ -384,7 +430,17 @@ def main() -> int:
     p.add_argument("--lat", type=float, default=41.311)
     p.add_argument("--lon", type=float, default=69.240)
     p.add_argument("--obyekt", action="append", help="nomzod: nom:lat:lon (sektor shundan hisoblanadi)")
+    p.add_argument("--haqiqiy", action="store_true",
+                   help="haqiqiy obyektlar reyestridan foydalanish (data/public/nomzodlar_uz.json)")
+    p.add_argument("--radius", type=float, default=None, help="faqat shu radiusdagi obyektlar (km)")
     p.set_defaults(fn=cmd_sektor)
+
+    p = sub.add_parser("nomzodlar", parents=[umumiy],
+                       help="haqiqiy sanoat obyektlari reyestri (koordinata + manba + holat)")
+    p.add_argument("--lat", type=float, default=41.311)
+    p.add_argument("--lon", type=float, default=69.240)
+    p.add_argument("--radius", type=float, default=30.0)
+    p.set_defaults(fn=cmd_nomzodlar)
 
     a = ap.parse_args()
     if getattr(a, "list", False) and not a.cmd:      # --list (yollar bilan bir xil)

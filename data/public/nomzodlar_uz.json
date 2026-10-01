@@ -1,0 +1,82 @@
+{
+  "yangilangan": "2026-10-01",
+  "izoh": "Toshkent viloyatidagi yirik sanoat obyektlarining HAQIQIY koordinatalari va quvvatlari. Har yozuvda manba (URL + sana + tier) ko'rsatilgan. «Taxminiy» nuqtalar ishlatilmaydi.",
+  "radius_km": 30,
+  "obyektlar": [
+    {
+      "nom": "Toshkent IES (issiqlik elektr stansiyasi)",
+      "tur": "energetika",
+      "lat": 41.3796,
+      "lon": 69.370217,
+      "quvvat": "2 230 MVt o'rnatilgan (o'rnatilgan: JSC «Toshkent IES» rasmiy)",
+      "yoqilg'i": "tabiiy gaz (asosiy), mazut (zaxira)",
+      "koordinata_manba": "Global Energy Monitor — Tashkent power station (exact)",
+      "koordinata_url": "https://www.gem.wiki/Tashkent_power_station",
+      "quvvat_manba": "JSC «Toshkent IES» rasmiy sayti (tep.uz / toshkenties.uz)",
+      "quvvat_url": "https://toshkenties.uz/uz/page/ies-az",
+      "sana": "2026-09-22",
+      "tier": "B",
+      "izoh": "Shahar shimoli-sharqida; 2015-yildan 370 MVt bug'-gaz qurilmasi. Shahar issiqlik ta'minotining asosiy manbai — qishda yuklama oshadi."
+    },
+    {
+      "nom": "Maxam Chirchiq (ammiak/kimyo zavodi)",
+      "tur": "kimyo",
+      "lat": 41.45579,
+      "lon": 69.576856,
+      "quvvat": "ammiak + nitrat kislota + karbamid (AO Maxam Chirchiq)",
+      "yoqilg'i": "tabiiy gaz (xom ashyo)",
+      "koordinata_manba": "Global Energy Monitor — Maxam Chirchiq Ammonia Plant (exact)",
+      "koordinata_url": "https://www.gem.wiki/Maxam_Chirchiq_Ammonia_Plant",
+      "quvvat_manba": "Global Energy Monitor (mahsulot ro'yxati)",
+      "quvvat_url": "https://www.gem.wiki/Maxam_Chirchiq_Ammonia_Plant",
+      "sana": "2026-09-11",
+      "tier": "B",
+      "izoh": "Chirchiq shahri; NOx va ammiak manbai. IES bilan deyarli bir yo'nalishda (55° va 60°) — shamol bo'yicha ajratilmaydi."
+    },
+    {
+      "nom": "AGMK Olmaliq (kon-metallurgiya kombinati)",
+      "tur": "metallurgiya",
+      "lat": 40.857,
+      "lon": 69.528,
+      "quvvat": "mis/molibden ishlab chiqarish + sulfat kislota qurilmalari",
+      "yoqilg'i": "metallurgiya (kuydirish)",
+      "koordinata_manba": "Sulphuric Acid on the Web — Almalyk MMC (40°51'26\"N, 69°31'40\"E)",
+      "koordinata_url": "http://www.sulphuric-acid.com/sulphuric-acid-on-the-web/acid%20plants/Almalyk%20MMC.htm",
+      "quvvat_manba": "AGMK rasmiy / Wikipedia (Olmaliq 40.850, 69.600)",
+      "quvvat_url": "https://en.wikipedia.org/wiki/Olmaliq",
+      "sana": "2026-08-13",
+      "tier": "B",
+      "izoh": "SO2 manbai; Toshkentdan ~56 km janubi-sharqda — shahar ekranidan tashqarida, o'z retseptori kerak."
+    },
+    {
+      "nom": "Akhangarancement (Ohangaron sement zavodi)",
+      "tur": "sement",
+      "lat": 40.931159,
+      "lon": 69.65255,
+      "quvvat": "2,18 mln t sement/yil (Eurocement rasmiy ro'yxati)",
+      "yoqilg'i": "ko'mir/gaz (klinker pechi)",
+      "koordinata_manba": "Global Energy Monitor — Akhangarantsement Ohangaron (exact)",
+      "koordinata_url": "https://www.gem.wiki/Akhangarantsement_OJSC_Ohangaron_Cement_Plant",
+      "quvvat_manba": "Eurocement — Akhangarancement profili",
+      "quvvat_url": "https://www.eurocement.ru/cntnt/eng10/plants2/uzbekistan2/akhangaran1/akhangaran2.html",
+      "sana": "2026-07-16",
+      "tier": "B",
+      "izoh": "Toshkent viloyatidagi eng yirik sement ishlab chiqaruvchisi; ~55 km janubi-sharqda."
+    },
+    {
+      "nom": "Toshkent Conch (Ohangaron tumani sement zavodi)",
+      "tur": "sement",
+      "lat": 40.84649,
+      "lon": 69.745487,
+      "quvvat": "6 300 t/kun liniya (2023 dan ishlaydi)",
+      "yoqilg'i": "ko'mir (klinker pechi)",
+      "koordinata_manba": "Global Energy Monitor — Tashkent Conch Cement Plant (exact)",
+      "koordinata_url": "https://www.gem.wiki/Tashkent_Conch_Cement_Plant",
+      "quvvat_manba": "UzDaily — Toshkent viloyatida 4 sement zavodi, jami 6,5 mln t/yil",
+      "quvvat_url": "https://www.uzdaily.uz/en/uzbekistan-operates-40-cement-plants-with-a-capacity-of-397-million-tons/",
+      "sana": "2025-03-08",
+      "tier": "B",
+      "izoh": "Xitoy investitsiyasidagi zavod; ~67 km janubi-sharqda."
+    }
+  ]
+}
