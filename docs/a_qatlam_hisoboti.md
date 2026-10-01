@@ -1,5 +1,7 @@
 # 15 — A-QATLAM HISOBOTI (kirishsiz rejim) · **v2 — 180 kun, haqiqiy obyektlar**
 
+> **B-qatlam (01.10.2026):** pastdan-yuqoriga mass-balans bajarildi — EF 0,40–1,42 g NOx/kWh, oqim 0,074–0,260 kg/s, model 5,7–11,5 µg/m³ vs kuzatuv +9,24 µg/m³ → nisbat 0,80–1,62 → **mustaqil bahoga sig'adi** (`docs/b_qatlam_mass_balans.md`).
+
 **Davr:** 2026-04-04 → 2026-09-30 (4 320 soat / 180 kun) · **Retseptor:** Toshkent markazi, 41,311°N / 69,240°E
 **Hisobot sanasi:** 2026-10-01 · **Yo'llar:** #7 «shamol atributsiyasi» + #6 «ochiq ekran» (`registry.PATHS`)
 **Isbot kuchi:** **2** — hududiy skrining; obyekt darajasidagi xulosa uchun ≥3 kuchli ≥2 yo'l kerak

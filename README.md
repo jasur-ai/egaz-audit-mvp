@@ -12,7 +12,7 @@
 cd MVP
 make install                      # yoki: pip install -r requirements.txt
 make demo                         # S1→S6 quvur (~35 s) + S8 dashboard
-make test                         # 175 test
+make test                         # 208 test
 make monitor                      # dreyf/FPR trendi hisoboti
 make serve                        # S7: serving :8001
 make docker                       # S9: konteyner
@@ -44,8 +44,9 @@ make docker                       # S9: konteyner
 | S7 Serving | FastAPI + `/score` | ✅ `src/api/app.py` (sinxron endpointlar — FastAPI avtomatik threadpool; TZ §S7 tuzoq qoidasi) |
 | S8 Dashboard | `dashboard/app.py`, skrinshotlar | ✅ `web/dashboard.html` (statik, CDN'siz; `make dashboard`) |
 | S8 Monitoring (real qism) | dreyf/FPR trendi | ✅ `src/monitor.py` + `scripts/run_monitor.py` — PSI/KS, FPR trendi, qaror qoidalari (dashboard'ga ulangan) |
-| S9 Test/Docker/hujjat | CI, 20+ test, docs | ✅ **175 test** · `Dockerfile` · `docker-compose.yml` · `.github/workflows/ci.yml` · `docs/architecture.md` · `docs/limitations.md` |
+| S9 Test/Docker/hujjat | CI, 20+ test, docs | ✅ **208 test** · `Dockerfile` · `docker-compose.yml` · `.github/workflows/ci.yml` · `docs/architecture.md` · `docs/limitations.md` |
 | **S12 Kirishsiz rejim** | ruxsatsiz tekshiruv yo'llari | ✅ **8 yo'l** (`src/kirishsiz/`) · 51 test · CLI `scripts/kirishsiz.py --list` · ochiq manbalar `scripts/fetch_public.py` · hujjat `docs/kirishsiz_yollar.md` |
 | **S13 A-qatlam (92 kun)** | ochiq manbalar bilan birinchi tekshiruv | ✅ `screener.dirty_hours_by_time` + `sector.directional_enrichment` (lift) · `scripts/kirishsiz.py sektor` · 20 test · hisobot `docs/a_qatlam_hisoboti.md` |
 | **S14 A-qatlam v2 (180 kun)** | real obyektlar bilan tekshiruv | ✅ `facilities.py` (manbali koordinatalar, radius, ajratilmaydigan guruhlar) · `data/public/nomzodlar_uz.json` (5 obyekt) · CLI `nomzodlar` va `sektor --haqiqiy` · 14 test · 0/180 kun · IES NO2 lift 2,30 · hisobot `docs/a_qatlam_hisoboti.md` |
+| **S15 B-qatlam: mass-balans** | pastdan yuqoriga tekshiruv (yo'l #2) | ✅ `bottomup.py` (AP-42 EF zanjiri · Briggs σ · Gauss · mos kelish ulushi) · CLI `scripts/kirishsiz.py pastdan` · **33 test** · EF 0,40–1,42 g NOx/kWh → 0,074–0,260 kg/s → model 5,7–11,5 vs kuzatuv +9,24 µg/m³ (nisbat 0,80–1,62) · hujjat `docs/b_qatlam_mass_balans.md` |
 | S10 Demo/himoya | taqdimot, final hisobot | ✅ `presentation/DEMO.md` (10 slayd + hakam savollari); hisobot: `reports/eval_report.md` |

@@ -248,6 +248,106 @@ def cmd_band(a) -> int:
     return 0
 
 
+def cmd_pastdan(a) -> int:
+    """Yo'l #2 — pastdan yuqoriga: ishlab chiqarish → EF → oqim → dispersiya → kuzatuv bilan solishtirish."""
+    from src.kirishsiz import bottomup as BU  # noqa: E402
+    from src.kirishsiz import screener  # noqa: E402
+
+    # --- 1) EF zanjiri
+    ef_past, ef_yuqori = a.ef_past, a.ef_yuqori
+    izoh = []
+    if a.lb_past is not None or a.lb_yuqori is not None:
+        fiklar = _nums(a.fik) or [0.35, 0.5]
+        lp = a.lb_past if a.lb_past is not None else a.lb_yuqori
+        ly = a.lb_yuqori if a.lb_yuqori is not None else a.lb_past
+        ggj_p = BU.lb_per_mmbtu_to_g_per_gj(lp)
+        ggj_y = BU.lb_per_mmbtu_to_g_per_gj(ly)
+        ef_past = BU.g_per_gj_to_g_per_kwh(ggj_p, max(fiklar))
+        ef_yuqori = BU.g_per_gj_to_g_per_kwh(ggj_y, min(fiklar))
+        izoh.append({"lb_mmbtu": [lp, ly], "g_gj": [round(ggj_p, 1), round(ggj_y, 1)],
+                     "fik": [min(fiklar), max(fiklar)]})
+    if ef_past is None or ef_yuqori is None:
+        print("⚠️  EF kerak: --ef-past/--ef-yuqori (g/kWh) yoki --lb-past/--lb-yuqori (+ --fik)")
+        return 2
+
+    # --- 2) masofa
+    masofa = a.masofa
+    nom = a.obyekt or "obyekt"
+    if masofa is None and a.obyekt:
+        try:
+            nm, la, lo = a.obyekt.split(":")
+            from src.kirishsiz.plume import haversine_m, bearing_deg  # noqa: E402
+            nom = nm
+            masofa = haversine_m(a.lat, a.lon, float(la), float(lo)) / 1000.0
+            a._azimut = round(bearing_deg(a.lat, a.lon, float(la), float(lo)), 1)
+        except ValueError:
+            print(f"⚠️  --obyekt formati nom:lat:lon bo'lishi kerak: {a.obyekt}")
+            return 2
+    if masofa is None:
+        print("⚠️  masofa kerak: --masofa km yoki --obyekt nom:lat:lon")
+        return 2
+    azimut = getattr(a, "_azimut", a.azimut)
+
+    # --- 3) hisob
+    res = BU.bottom_up(a.ishlab_chiqarish, ef_past, ef_yuqori, masofa, a.shamol,
+                       a.barqarorlik, a.mo_ri, not a.qishloq)
+
+    # --- 4) sektor bo'yicha mos kelish ulushi va o'rtacha model qiymati
+    mos = None
+    ilova = {}
+    if azimut is not None and a.shamol_fayl:
+        wd = _rows(a.shamol_fayl)
+        winds = [r["shamol_yonalishi_grad"] for r in wd]
+        mos = BU.alignment_share(winds, azimut, a.kenglik, a.tol)
+        if "xato" not in mos:
+            ilova["ssenariylar"] = BU.sector_weighted_scenarios(
+                res["oqim_kg_s"]["yuqori"], masofa, mos["ulush_sektorda"],
+                (a.shamol, a.shamol * 0.5), (a.barqarorlik,), a.mo_ri, not a.qishloq)
+            ilova["past_oqim"] = BU.sector_weighted_scenarios(
+                res["oqim_kg_s"]["past"], masofa, mos["ulush_sektorda"],
+                (a.shamol, a.shamol * 0.5), (a.barqarorlik,), a.mo_ri, not a.qishloq)
+    if a.kuzatuv is not None and ilova.get("ssenariylar"):
+        sm = ilova["ssenariylar"][0]["sektor_ortacha_ug_m3"]
+        ilova["solishtirish"] = BU.consistency(sm, a.kuzatuv)
+
+    if a.json:
+        _print_json({"obyekt": nom, "ef_zanjiri": izoh, "natija": res, "mos_ulush": mos, **ilova})
+        return 0
+
+    # --- 5) chop etish
+    print(f"PASTDAN YUQORIGA — {nom} · {masofa:.2f} km" + (f" · azimut {azimut:.1f}°" if azimut is not None else ""))
+    if izoh:
+        z = izoh[0]
+        print(f"  EF zanjiri: {z['lb_mmbtu'][0]}–{z['lb_mmbtu'][1]} lb/MMBtu = "
+              f"{z['g_gj'][0]}–{z['g_gj'][1]} g/GJ → FIK {z['fik'][0]:.0%}–{z['fik'][1]:.0%} → "
+              f"{ef_past:.2f}–{ef_yuqori:.2f} g/kWh  (AP-42 §3.1-1)")
+    else:
+        print(f"  EF (berilgan): {ef_past:.2f}–{ef_yuqori:.2f} g/kWh")
+    y = res["yillik_tonna"]
+    q = res["oqim_kg_s"]
+    print(f"  Ishlab chiqarish {a.ishlab_chiqarish:g} TWh/yil → NOx {y['past']:,.0f}–{y['yuqori']:,.0f} t/yil "
+          f"→ oqim {q['past']:,.3f}–{q['yuqori']:,.3f} kg/s")
+    print(f"  Disperisiya: {a.barqarorlik} · u={a.shamol:g} m/s · mo'ri {a.mo_ri:g} m · "
+          f"{'shahar' if not a.qishloq else 'qishloq'} · σy {res['sigma']['sigma_y']:,.0f} m · "
+          f"σz {res['sigma']['sigma_z']:,.0f} m")
+    print(f"  To'g'ridan-to'g'ri o'qda (doim mos): {res['kutilgan_ug_m3']['past']:,.1f}–"
+          f"{res['kutilgan_ug_m3']['yuqori']:,.1f} µg/m³ NOx")
+    if mos and "xato" not in mos:
+        print(f"  Mos kelish ulushi: sektorda {mos['mos_soat']}/{mos['sektor_soat']} soat "
+              f"= {mos['ulush_sektorda']:.1%} (barcha soatlarning {mos['ulush_jami']:.1%} i)")
+        for r in ilova["ssenariylar"]:
+            print(f"   • {r['barqarorlik']} · u={r['shamol_ms']:g} m/s → o'qda {r['aligned_ug_m3']:,.1f} × "
+                  f"{r['mos_ulush']:.0%} = **sektor o'rtachasi {r['sektor_ortacha_ug_m3']:,.1f} µg/m³**")
+    if "solishtirish" in ilova:
+        c = ilova["solishtirish"]
+        print(f"  Kuzatuv bilan: model {c['model_ug_m3']:,.1f} vs yo'nalish ortiqchasi "
+              f"{c['kuzatuv_ug_m3']:,.1f} µg/m³ → nisbat {c['nisbat']} → {c['xulosa']}")
+    print(f"\n  Nima isbotlanmaydi: {res['nima_isbotlanmaydi']}")
+    print("  Isbot kuchi: 3 · EF adabiyot qiymati, dispersiya soddalashtirilgan (bitta shamol, "
+          "bir necha soat emas, o'rtacha yil)")
+    return 0
+
+
 def cmd_benford(a) -> int:
     if a.fayl:
         vals = []
@@ -375,6 +475,31 @@ def main() -> int:
     p.add_argument("--control-high", dest="control_high", type=float, default=0.0)
     p.add_argument("--hisobot", type=float, default=None)
     p.set_defaults(fn=cmd_band)
+
+    p = sub.add_parser("pastdan", parents=[umumiy],
+                       help="pastdan yuqoriga: ishlab chiqarish × EF → oqim → dispersiya (yo'l #2)")
+    p.add_argument("--obyekt", help="nom:lat:lon (masofa va azimut shundan)")
+    p.add_argument("--ishlab-chiqarish", type=float, required=True, help="yillik ishlab chiqarish, TWh")
+    p.add_argument("--ef-past", type=float, help="EF, g/kWh (quyi)")
+    p.add_argument("--ef-yuqori", type=float, help="EF, g/kWh (yuqori)")
+    p.add_argument("--lb-past", type=float, help="EF, lb/MMBtu (AP-42 quyi, masalan 0,13)")
+    p.add_argument("--lb-yuqori", type=float, help="EF, lb/MMBtu (AP-42 yuqori, masalan 0,32)")
+    p.add_argument("--fik", default="0.35,0.50", help="foydali FIK lar (vergul bilan), masalan 0.35,0.50")
+    p.add_argument("--masofa", type=float, help="masofa, km (berilmasa --obyekt dan)")
+    p.add_argument("--shamol", type=float, default=4.0, help="shamol tezligi, m/s (o'rtacha)")
+    p.add_argument("--barqarorlik", default="D", help="Briggs barqarorlik sinfi: A…F")
+    p.add_argument("--mo-ri", type=float, default=100.0, help="samarali mo'ri balandligi, m")
+    p.add_argument("--qishloq", action="store_true", help="qishloq rejimi (standart: shahar)")
+    p.add_argument("--fayl", help="havo sifati fayli (solishtirish uchun, ixtiyoriy)")
+    p.add_argument("--shamol-fayl", default="data/public/wind_era5_180kun.csv",
+                   help="shamol fayli (mos kelish ulushi uchun)")
+    p.add_argument("--kenglik", type=float, default=45.0, help="sektor yarim kengligi, daraja")
+    p.add_argument("--tol", type=float, default=9.0, help="«mos» tolerantligi, daraja")
+    p.add_argument("--lat", type=float, default=41.311, help="receptor kengligi")
+    p.add_argument("--lon", type=float, default=69.240, help="receptor uzunligi")
+    p.add_argument("--azimut", type=float, help="obyekt azimuti (--obyekt berilmasa)")
+    p.add_argument("--kuzatuv", type=float, help="kuzatilgan yo'nalish ortiqchasi, µg/m³")
+    p.set_defaults(fn=cmd_pastdan)
 
     p = sub.add_parser("benford", parents=[umumiy], help="Benford/dumaloq raqam skriningi")
     p.add_argument("--fayl")
