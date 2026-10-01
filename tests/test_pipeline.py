@@ -62,13 +62,14 @@ def test_a6_repeats_block(small_df):
 def test_feature_matrix_clean(small_df):
     feat = F.build_features(small_df)
     X, meta = F.feature_matrix(feat)
-    assert X.shape == (len(feat), len(F.FEATURES)) == (len(feat), 26)
+    assert X.shape == (len(feat), len(F.FEATURES)) == (len(feat), 33)
     assert np.isfinite(X).all()
     assert len(meta) == len(feat)
 
 
 def test_feature_groups_count():
-    assert len(F.FEATURE_GROUPS) == 6
+    """R41: 8 guruh (F7 aktivlik, F8 proksi qo'shildi)."""
+    assert len(F.FEATURE_GROUPS) == 8
 
 
 def test_flat_flag_catches_repeat(small_df):

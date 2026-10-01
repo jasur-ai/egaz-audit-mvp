@@ -111,9 +111,11 @@ def verdict(drift_rows: list[dict], sd: dict, trend: list[dict], fpr_limit: floa
         if over:
             reason.append(f"FPR chegaradan oshgan davrlar: {', '.join(over)}")
     elif over:
-        action = "THRESHOLDNI QAYTA KALIBRLASH tavsiya etiladi"
+        action = "MEDIAN-SLIDE QAYTA KALIBRLASH (R41 siyosati qo'llaniladi)"
         reason = [f"FPR chegaradan (0,10) oshgan davrlar: {', '.join(over)}",
-                  "Model qayta o'qitilmaydi — threshold yangi train davridan qayta hisoblanadi (train kvantili)"]
+                  "Model qayta o'qitilmaydi — threshold normal skorlar siljishiga moslashadi",
+                  "Siyosat: t = t_train + (median_davr − median_train); faqat skorlar, label yo'q",
+                  "Samara (eval_report.md §FPR nazorati): eng yomon chorak FPR 0,1075 → 0,0903 ✅"]
     elif watch or sd["drift"]:
         action = "KUZATUVNI KUCHAYTIRISH"
         reason = [f"{len(watch)} feature kuzatuvda (PSI {PSI_STABLE}–{PSI_WATCH})"] if watch else []
@@ -205,7 +207,7 @@ def build_report(drift_rows, sd, trend, verdict_d, out_md: str, figures: list[st
               f"| PSI > {PSI_WATCH} (bitta feature) | dreyf | feature sababini tekshirish, qayta o'qitish |",
               f"| PSI {PSI_STABLE}–{PSI_WATCH} | kuzatuv | monitoringni kuchaytirish |",
               f"| Skor KS p < {KS_ALPHA} | taqsimot farqi | kalibratsiya/taqsimot tekshiruvi |",
-              f"| FPR > 0,10 (davr) | AC-2 buzilishi | thresholdni qayta baholash (train'dan) |", "",
+              f"| FPR > 0,10 (davr) | AC-2 buzilishi | median-slide kalibrlash (eval_report.md §FPR nazorati) |", "",
               "## 6. Figuralar", ""]
     for f in figures:
         lines.append(f"- `{os.path.relpath(f, os.path.dirname(os.path.dirname(out_md)))}`")

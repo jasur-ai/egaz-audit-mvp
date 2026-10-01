@@ -88,7 +88,7 @@ def test_make_figures_creates_three(tmp_path):
 
 
 def test_dashboard_builder_phrases_cover_all_features():
-    """Izoh kaliti barcha 26 feature'ni qoplashi shart (dashboard sifati sharti)."""
+    """Izoh kaliti barcha feature'larni qoplashi shart (dashboard sifati sharti)."""
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "bd", os.path.join(BASE, "scripts", "build_dashboard.py"))

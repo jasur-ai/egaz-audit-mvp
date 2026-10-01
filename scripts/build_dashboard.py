@@ -31,6 +31,14 @@ FIGS = os.path.join(BASE, "reports", "figures")
 WEB = os.path.join(BASE, "web")
 
 FEATURE_PHRASE = {
+    # R41 — yangi guruhlar (F7 aktivlik, F8 proksi) va A7 feature'i
+    "prod_report_gap": "ishlab chiqarish hisoboti mustaqil statistikadan yuqori (A5 signali)",
+    "energy_report_gap": "energiya hisoboti mustaqil statistikadan chetlangan",
+    "offsets_own_dev": "offset hisoboti o'z tarixidan keskin chetlangan (A7 signali)",
+    "proxy_gap": "hisobot quyi-dan-yuqoriga proksidan chetlangan",
+    "proxy_gap_own_dev": "proxy chetlanishi o'z tarixidan farq qilgan",
+    "proxy_growth": "proksi (faoliyat) o'zgarishi",
+    "proxy_gap_x_growth": "chetlanish × faoliyat o'zgarishi (vaqt-aralashtirish signali)",
     "log_reported": "e'lon qilingan hajm darajasi",
     "qoq_growth_reported": "chorakma-chorak keskin o'zgarish",
     "reported_to_energy": "hisob ↔ energiya nomuvofiqligi",

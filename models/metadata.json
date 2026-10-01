@@ -6,9 +6,9 @@
     "contamination": 0.12,
     "random_state": 42
   },
-  "train_seconds": 3.68,
+  "train_seconds": 3.93,
   "rule_version": "1.0",
-  "trained_at": "2026-09-30 16:42:28",
+  "trained_at": "2026-10-01 03:32:53",
   "features": [
     "log_reported",
     "qoq_growth_reported",
@@ -22,6 +22,7 @@
     "offsets_share",
     "offsets_share_growth",
     "fugitive_ratio_change",
+    "offsets_own_dev",
     "rolling_dev",
     "repeat_count",
     "flat_flag",
@@ -35,9 +36,122 @@
     "size_pct",
     "quarter_index",
     "energy_to_prod_dev",
-    "reporting_volatility"
+    "reporting_volatility",
+    "prod_report_gap",
+    "energy_report_gap",
+    "proxy_gap",
+    "proxy_gap_own_dev",
+    "proxy_growth",
+    "proxy_gap_x_growth"
   ],
-  "threshold_if": 1.3676193966367933e-17,
+  "feature_groups": {
+    "nisbat": [
+      "log_reported",
+      "qoq_growth_reported",
+      "reported_to_energy"
+    ],
+    "energiya": [
+      "energy_intensity",
+      "energy_intensity_growth",
+      "ghg_intensity",
+      "ghg_intensity_growth"
+    ],
+    "tarkib": [
+      "gas_share",
+      "gas_share_growth",
+      "offsets_share",
+      "offsets_share_growth",
+      "fugitive_ratio_change",
+      "offsets_own_dev"
+    ],
+    "dinamika": [
+      "rolling_dev",
+      "repeat_count",
+      "flat_flag",
+      "seasonal_residual",
+      "drift_slope"
+    ],
+    "aniqlik": [
+      "drift_estimate",
+      "jump_flag",
+      "unit_jump_flag",
+      "boundary_mix_flag"
+    ],
+    "miqyos": [
+      "log_production",
+      "size_pct",
+      "quarter_index",
+      "energy_to_prod_dev",
+      "reporting_volatility"
+    ],
+    "aktivlik": [
+      "prod_report_gap",
+      "energy_report_gap"
+    ],
+    "proksi": [
+      "proxy_gap",
+      "proxy_gap_own_dev",
+      "proxy_growth",
+      "proxy_gap_x_growth"
+    ]
+  },
+  "threshold_if": 6.636630196679531e-17,
+  "threshold_policy": {
+    "statik": 0.0,
+    "siljuvchi_kvantil": {
+      "18": 0.0,
+      "19": -4.6e-05,
+      "20": 0.000609,
+      "21": 0.00266
+    },
+    "median_slide": {
+      "18": 0.003704,
+      "19": 0.007787,
+      "20": 0.008103,
+      "21": 0.005868
+    },
+    "qoida": "median_slide: t = t_train + (median_davr − median_train); faqat skorlar, label yo'q"
+  },
+  "rules_channel": {
+    "R-A5 aktivlik kross-tekshiruvi": {
+      "feature": "prod_report_gap",
+      "op": ">=",
+      "thr": 0.01,
+      "target": "A5",
+      "val_f1": 1.0,
+      "val_precision": 1.0,
+      "val_recall": 1.0,
+      "val_counts": {
+        "tp": 61,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "R-A7 offset devori": {
+      "feature": "offsets_own_dev",
+      "op": ">=",
+      "thr": 0.7,
+      "target": "A7",
+      "val_f1": 0.517,
+      "val_precision": 0.433,
+      "val_recall": 0.643,
+      "val_counts": {
+        "tp": 45,
+        "fp": 59,
+        "fn": 25
+      }
+    }
+  },
+  "rules_protocol": "chegaralar validatsiya oynasida (q16-17) F1 bo'yicha tanlangan; test davri tanlovga kirmagan",
+  "proxy": {
+    "formula": "a + b*energy + c*production",
+    "coef": [
+      0.592277,
+      0.078453,
+      -0.038397
+    ],
+    "fit": "q_index <= 17 (train), robust 2-qadam"
+  },
   "trained_rows": 41400,
   "test_rows": 9200,
   "injection_rate": 0.15
