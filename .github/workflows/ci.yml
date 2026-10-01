@@ -19,7 +19,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Artefaktlar tayyorlash (quvur + modellar, ~25 s)
         run: python3 scripts/run_all.py
-      - name: Testlar (90 ta) — quvur + baholash + monitoring + dayjest + R41
+      - name: Testlar (141 ta) — quvur + baholash + monitoring + dayjest + kirishsiz
         run: pytest -q tests/
       - name: Quvur smoke (kichik hajm)
         run: python3 -c "import sys; sys.path.insert(0,'.'); from src.generator import generate; from src import features as F; import numpy as np; d=generate(n_companies=50, seed=1); X,_=F.feature_matrix(F.build_features(d)); assert np.isfinite(X).all(); print('quvur OK', X.shape)"

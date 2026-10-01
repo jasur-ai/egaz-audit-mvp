@@ -12,7 +12,7 @@
 cd MVP
 make install                      # yoki: pip install -r requirements.txt
 make demo                         # S1→S6 quvur (~35 s) + S8 dashboard
-make test                         # 90 test
+make test                         # 141 test
 make monitor                      # dreyf/FPR trendi hisoboti
 make serve                        # S7: serving :8001
 make docker                       # S9: konteyner
@@ -44,5 +44,6 @@ make docker                       # S9: konteyner
 | S7 Serving | FastAPI + `/score` | ✅ `src/api/app.py` (sinxron endpointlar — FastAPI avtomatik threadpool; TZ §S7 tuzoq qoidasi) |
 | S8 Dashboard | `dashboard/app.py`, skrinshotlar | ✅ `web/dashboard.html` (statik, CDN'siz; `make dashboard`) |
 | S8 Monitoring (real qism) | dreyf/FPR trendi | ✅ `src/monitor.py` + `scripts/run_monitor.py` — PSI/KS, FPR trendi, qaror qoidalari (dashboard'ga ulangan) |
-| S9 Test/Docker/hujjat | CI, 20+ test, docs | ✅ **90 test** · `Dockerfile` · `docker-compose.yml` · `.github/workflows/ci.yml` · `docs/architecture.md` · `docs/limitations.md` |
+| S9 Test/Docker/hujjat | CI, 20+ test, docs | ✅ **141 test** · `Dockerfile` · `docker-compose.yml` · `.github/workflows/ci.yml` · `docs/architecture.md` · `docs/limitations.md` |
+| **S12 Kirishsiz rejim** | ruxsatsiz tekshiruv yo'llari | ✅ **8 yo'l** (`src/kirishsiz/`) · 51 test · CLI `scripts/kirishsiz.py --list` · ochiq manbalar `scripts/fetch_public.py` · hujjat `docs/kirishsiz_yollar.md` |
 | S10 Demo/himoya | taqdimot, final hisobot | ✅ `presentation/DEMO.md` (10 slayd + hakam savollari); hisobot: `reports/eval_report.md` |

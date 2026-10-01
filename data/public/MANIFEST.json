@@ -1,0 +1,44 @@
+{
+  "yozuvlar": [
+    {
+      "manba": "open-meteo-aq",
+      "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=41.311&longitude=69.24&hourly=pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&timezone=Asia%2FTashkent&past_days=7&forecast_days=0",
+      "fayl": "data/public/open-meteo-aq_41.311_69.24_7k.csv",
+      "qatorlar": 168,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo; CAMS ma'lumoti)",
+      "olingan_vaqt_utc": "2026-10-01T09:23:29+00:00",
+      "sha256": "1deff17a8a7deca2c6bc65ff57b7aa273f80d4c1be6a838c93b894bb15a29e86"
+    },
+    {
+      "manba": "open-meteo-wind",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=41.311&longitude=69.24&hourly=wind_speed_10m,wind_direction_10m,temperature_2m,relative_humidity_2m&timezone=Asia%2FTashkent&past_days=7&forecast_days=0",
+      "fayl": "data/public/open-meteo-wind_41.311_69.24_7k.csv",
+      "qatorlar": 168,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo; ECMWF/ERA5)",
+      "olingan_vaqt_utc": "2026-10-01T09:23:30+00:00",
+      "sha256": "eae36d5eb455d777a412bd7e3ebaa31b821a30a122589e93208ebfda41b1917f"
+    },
+    {
+      "manba": "open-meteo-aq",
+      "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=41.311&longitude=69.24&hourly=pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide&timezone=Asia%2FTashkent&past_days=7&forecast_days=0",
+      "fayl": "data/public/open-meteo-aq_41.311_69.24_7k.csv",
+      "qatorlar": 168,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo; CAMS ma'lumoti)",
+      "olingan_vaqt_utc": "2026-10-01T09:23:34+00:00",
+      "sha256": "1deff17a8a7deca2c6bc65ff57b7aa273f80d4c1be6a838c93b894bb15a29e86"
+    },
+    {
+      "manba": "open-meteo-wind",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=41.311&longitude=69.24&hourly=wind_speed_10m,wind_direction_10m,temperature_2m,relative_humidity_2m&timezone=Asia%2FTashkent&past_days=7&forecast_days=0",
+      "fayl": "data/public/open-meteo-wind_41.311_69.24_7k.csv",
+      "qatorlar": 168,
+      "kalit": "kerak emas",
+      "litsenziya": "CC-BY-4.0 (Open-Meteo; ECMWF/ERA5)",
+      "olingan_vaqt_utc": "2026-10-01T09:23:35+00:00",
+      "sha256": "eae36d5eb455d777a412bd7e3ebaa31b821a30a122589e93208ebfda41b1917f"
+    }
+  ]
+}
