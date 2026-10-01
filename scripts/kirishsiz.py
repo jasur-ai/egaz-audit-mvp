@@ -220,14 +220,17 @@ def cmd_sorov(a) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Kirishsiz (ruxsatsiz) tekshiruv yo'llari")
-    ap.add_argument("--json", action="store_true", help="JSON chiqarish")
+    ap.add_argument("--json", action="store_true", help="JSON chiqarish (subkomandadan oldin yoki keyin)")
+    # umumiy flag: subkomanda ichida ham --json qabul qilinsin
+    umumiy = argparse.ArgumentParser(add_help=False)
+    umumiy.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--list", action="store_true", help="yo'llar reyestri (yollar bilan bir xil)")
     sub = ap.add_subparsers(dest="cmd")
 
-    p = sub.add_parser("yollar", help="yo'llar reyestri")
+    p = sub.add_parser("yollar", parents=[umumiy], help="yo'llar reyestri")
     p.set_defaults(fn=cmd_list)
 
-    p = sub.add_parser("ekran", help="ochiq havo sifati ekrani (kalitsiz)")
+    p = sub.add_parser("ekran", parents=[umumiy], help="ochiq havo sifati ekrani (kalitsiz)")
     p.add_argument("--lat", type=float, default=41.311)
     p.add_argument("--lon", type=float, default=69.240)
     p.add_argument("--kun", type=int, default=7)
@@ -238,7 +241,7 @@ def main() -> int:
     p.add_argument("--out-wind", dest="out_wind", default=None)
     p.set_defaults(fn=cmd_ekran)
 
-    p = sub.add_parser("band", help="pastdan yuqoriga oraliq hisobi")
+    p = sub.add_parser("band", parents=[umumiy], help="pastdan yuqoriga oraliq hisobi")
     p.add_argument("--faoliyat", type=float, required=True)
     p.add_argument("--ef-low", dest="ef_low", type=float, default=None)
     p.add_argument("--ef-high", dest="ef_high", type=float, default=None)
@@ -251,13 +254,13 @@ def main() -> int:
     p.add_argument("--hisobot", type=float, default=None)
     p.set_defaults(fn=cmd_band)
 
-    p = sub.add_parser("benford", help="Benford/dumaloq raqam skriningi")
+    p = sub.add_parser("benford", parents=[umumiy], help="Benford/dumaloq raqam skriningi")
     p.add_argument("--fayl")
     p.add_argument("--qiymatlar", default="")
     p.add_argument("--rejim", default="1", choices=["1", "2", "12"])
     p.set_defaults(fn=cmd_benford)
 
-    p = sub.add_parser("orbita", help="sun'iy yo'ldosh oqim bahosi")
+    p = sub.add_parser("orbita", parents=[umumiy], help="sun'iy yo'ldosh oqim bahosi")
     p.add_argument("--kesim", help="qatlam og'ishlari kg/m² (vergul bilan) — CSF")
     p.add_argument("--dx", type=float, default=3500.0)
     p.add_argument("--ime", type=float, default=None)
@@ -270,7 +273,7 @@ def main() -> int:
     p.add_argument("--shovqin", type=float, default=1e-5)
     p.set_defaults(fn=cmd_orbita)
 
-    p = sub.add_parser("transsect", help="yo'l transsekti inversiyasi")
+    p = sub.add_parser("transsect", parents=[umumiy], help="yo'l transsekti inversiyasi")
     p.add_argument("--c", type=float, required=True, help="fon ayirilgan konsentratsiya, kg/m³")
     p.add_argument("--shamol", type=float, default=3.0)
     p.add_argument("--sigma-z", dest="sigma_z", type=float, default=20.0)
@@ -281,7 +284,7 @@ def main() -> int:
     p.add_argument("--reja-target", dest="reja_target", type=float, default=None)
     p.set_defaults(fn=cmd_transsect)
 
-    p = sub.add_parser("sorov", help="huquqiy talab (Aarhus) generatori")
+    p = sub.add_parser("sorov", parents=[umumiy], help="huquqiy talab (Aarhus) generatori")
     p.add_argument("--tashkilot", required=True)
     p.add_argument("--tur", default="olchov", choices=list(requests_gen.STANDART_SOROVLAR))
     p.add_argument("--obyekt", default="⟦obyekt nomi⟧")
