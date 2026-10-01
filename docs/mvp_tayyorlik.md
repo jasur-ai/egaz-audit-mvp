@@ -18,7 +18,7 @@
 | Mezon | Holat | Dalil |
 |---|---|---|
 | **Ishlaydigan kod** | ✅ | 14 modul (`src/kirishsiz/`), 2 loyiha, CLI 20+ buyruq; har biri **jonli ma'lumotda** ishlatilgan |
-| **Testlar** | ✅ | **287** (L1) + **193** (L2) = **480 passed** |
+| **Testlar** | ✅ | **300** (L1) + **193** (L2) = **493 passed** |
 | **CI (mustaqil klon)** | ✅ | L1 `jasur-ai/egaz-audit-mvp` CI **#19 yashil** (115 s), L2 `eco-ledger-mvp` CI #16 yashil |
 | **Jonli ma'lumot** | ✅ | 30+ fayl SHA-256 bilan (MANIFEST); **8 760 soat** × 4 retseptor, bo'sh qiymat **0** |
 | **Qayta ishlab chiqarish** | ✅ | har raqam bitta CLI buyrug'i bilan takrorlanadi (quyida §3) |

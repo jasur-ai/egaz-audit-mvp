@@ -457,6 +457,32 @@ def cmd_retseptorlar(a) -> int:
     return 0
 
 
+def cmd_huquqiy(a) -> int:
+    """Huquqiy asos registri (R54)."""
+    from src.kirishsiz import huquqiy_asos as HA  # noqa: E402
+
+    if a.tekshir:
+        _print_json(HA.tekshir())
+        return 0
+    if a.qamrov:
+        _print_json(HA.qamrov())
+        return 0
+    if a.havola or a.element:
+        elementlar = a.element or list(HA.XARITA)
+        matn = HA.havola_matni(elementlar)
+        if a.json:
+            _print_json({e: [h["id"] for h in HA.asoslar(e)] for e in elementlar})
+            return 0
+        print(matn)
+        return 0
+    if a.json:
+        _print_json({"hujjatlar": HA.HUJJATLAR, "xarita": HA.XARITA,
+                     "qamrov": HA.qamrov(), "statistika": HA.statistika()})
+        return 0
+    print(HA.matn())
+    return 0
+
+
 def cmd_taqqos(a) -> int:
     """Retseptorlarni yonma-yon qo'yish (R53)."""
     from src.kirishsiz import mavsum as MV  # noqa: E402
@@ -775,6 +801,15 @@ def main() -> int:
     p.add_argument("--chegara", type=float, default=8.0, help="isitish mezoni, °C")
     p.add_argument("--chegara-epizod", type=float, default=35.0, help="epizod chegarasi, µg/m³ (kunlik)")
     p.set_defaults(fn=cmd_mavsum)
+
+    p = sub.add_parser("huquqiy", parents=[umumiy],
+                       help="huquqiy asos registri va xaritasi (farmon/qaror/qonun)")
+    p.add_argument("--xarita", action="store_true", help="element → asoslar jadvali")
+    p.add_argument("--element", action="append", help="faqat shu element(lar) uchun asoslar")
+    p.add_argument("--qamrov", action="store_true", help="qoplash statistikasi")
+    p.add_argument("--tekshir", action="store_true", help="registrni tekshirish")
+    p.add_argument("--havola", action="store_true", help="huquqiy asos bloki (matn)")
+    p.set_defaults(fn=cmd_huquqiy)
 
     p = sub.add_parser("taqqos", parents=[umumiy],
                        help="retseptorlarni yonma-yon qo'yish (yillik/isitish lift + kunlik r)")

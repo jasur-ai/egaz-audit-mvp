@@ -369,7 +369,10 @@ def test_request_text_cites_sources_and_deadline():
     assert "49-moddasi" in m and "Aarhus" in m and "15 kun" in m
     assert r["muddat"]["javob_sana"] == "2026-10-16"
     assert r["muddat"]["eskalatsiya_sana"] == "2026-10-21"
-    assert len(r["manbalar"]) == 4
+    # R54: manbalar endi huquqiy registrdan olinadi (Konstitutsiya · Aarhus · ochiqlik qonuni ·
+    # PQ-343 · PF-69 · muddat qoidasi) — kamida 4 ta va PQ-343 bilan bog'langan
+    assert len(r["manbalar"]) >= 4
+    assert any("PQ-343" in m for m in r["manbalar"])
 
 
 def test_request_unknown_type_rejected():

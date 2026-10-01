@@ -75,7 +75,11 @@ def main() -> int:
         if not a.dry_run:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(r["matn"] + "\n")
-            R.tracker_add(TRACKER, r)
+            bor = {(t.get("tashkilot"), t.get("sana")) for t in R.tracker_load(TRACKER)}
+            if (r["tashkilot"], r["sana"]) not in bor:
+                R.tracker_add(TRACKER, r)
+            else:
+                print(f"     ↺ kuzatuvda allaqachon bor (takror yozilmadi)")
         print(f"  ✅ {x['fayl']:32} javob muddati {r['muddat']['javob_sana']} · "
               f"eskalatsiya {r['muddat']['eskalatsiya_sana']}")
     if not a.dry_run:

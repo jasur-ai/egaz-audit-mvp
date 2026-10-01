@@ -24,13 +24,16 @@ import os
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable
 
+from . import huquqiy_asos as HA
+
 JAVOB_KUN = 15          # murojaat ko'rib chiqish muddati (konstitutsiyaviy amaliyot)
 ESKALATSIYA_KUN = 5     # ichki qoidamiz: javob bo'lmasa apellyatsiya/yuqori organga
-MANBALAR = [
-    "Konstitutsiya 49-modda (ishonchli ekologik axborot)",
-    "Aarhus konventsiyasi, 4-modda (O'zbekiston uchun 25.08.2025 dan kuchda)",
-    "Davlat organlari faoliyatining ochiqligi to'g'risidagi qonun (05.05.2014)",
-    "Murojaatlar 15 kun ichida ko'riladi (constitution.uz)",
+# Huquqiy asoslar registrdan olinadi (R54) — xatga bir necha hujjat havolasi tushadi.
+HUQUQIY_ELEMENTLAR = ["yol:requests_gen (Aarhus talabi)", "tashkiliy:ochiq ma'lumot e'lon qilish"]
+_asoslar = HA.asoslar(HUQUQIY_ELEMENTLAR[0])
+_qoshimcha = [h for h in HA.asoslar(HUQUQIY_ELEMENTLAR[1]) if h["id"] not in {x["id"] for x in _asoslar}]
+MANBALAR = [f"{h['tur']} {h['raqam']} — {h['nom']}" for h in _asoslar + _qoshimcha] + [
+    "Murojaatlar 15 kun ichida ko'riladi; zarur bo'lsa 1 oygacha uzaytiriladi",
 ]
 
 STANDART_SOROVLAR = {
@@ -105,6 +108,8 @@ def build_request(
         "AXBOROT OCHISH TALABI",
         f"(Konstitutsiyaning 49-moddasi, Aarhus konventsiyasining 4-moddasi va davlat organlari",
         f"faoliyatining ochiqligi to'g'risidagi qonun asosida)",
+        "",
+        HA.havola_matni(HUQUQIY_ELEMENTLAR, qisqa=True),
         "",
         f"Men, {sorovchi}, {obyekt} obyekti bo'yicha atrof-muhit holatiga oid quyidagi",
         "ma'lumotlarni so'rayman:",

@@ -204,4 +204,4 @@ CLI: `python3 scripts/kirishsiz.py sorov --kutish` (javobsizlar va muddatlar).
 
 **Yangi kod:** `src/kirishsiz/isitish.py` (12 test) · `mavsum.taqqoslash()` + `pearson()` ·
 CLI `kirishsiz.py isitish` va `kirishsiz.py taqqos` · `scripts/build_requests_2026_10.py`.
-**Testlar:** **287** (L1) + 193 (L2) = **480**.
+**Testlar:** **300** (L1) + 193 (L2) = **493**.
