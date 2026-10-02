@@ -5,6 +5,8 @@ import os
 import sys
 from datetime import datetime, timedelta
 
+import pytest
+
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE)
 
@@ -104,6 +106,10 @@ def test_run_dry_run_makes_no_state(tmp_path):
     """dry-run: kadansdan mustaqil matn qaytadi, state fayli o'zgarmaydi."""
     p = os.path.join(BASE, "reports", "digest_state.json")
     before = open(p, encoding="utf-8").read() if os.path.exists(p) else None
+    # Katta o'qitilgan model ZIP/paketga kiritilmasligi mumkin; u holda test o'tkazib yuboriladi.
+    # Modelni qayta yasash: python3 scripts/run_all.py
+    if not os.path.exists(os.path.join(BASE, "models", "if_v1.joblib")):
+        pytest.skip("models/if_v1.joblib yo'q — `python3 scripts/run_all.py` bilan qayta o'qitiladi")
     res = DG.run(BASE, token="", chat_ids=[], dry_run=True)
     after = open(p, encoding="utf-8").read() if os.path.exists(p) else None
     assert res["sent"] is False and "preview" in res and "HAFTALIK" in res["preview"]
