@@ -6,6 +6,16 @@
 > (S1 generator → S3 feature → S4 IF → S5 AE/OCSVM → S6 baholash → S7 serving).
 > Real korxona ma'lumotlari yopiq bo'lgani uchun UZ-proksi sintetik oqim ishlatiladi (TZ §6 — uch qatlamli strategiya).
 
+## Jonli ko'rish va uzilish paytidagi zaxira
+
+- **Asosiy panel (Cloudflare):** https://egaz-audit.pages.dev/
+- **Mustaqil statik zaxira (GitHub Pages):** https://jasur-ai.github.io/egaz-audit-mvp/
+- **To'liq oflayn nusxa:** shu repodagi `docs/index.html`; tanlov papkasida `08-DEMO-OFFLINE.html`.
+
+GitHub Pages zaxirasi — brauzer ichida ishlaydigan kalkulyator va huquqiy xarita; u jonli API/panelning
+ma'lumot bazasi yoki Telegram botining o'rnini bosmaydi. Internet butunlay uzilsa, oflayn HTML faylni
+kompyuterda oching. Zaxira holatini tekshirish: workspace'da `python3 infra/monitor_tanlov_external.py`.
+
 ## Ishga tushirish
 
 ```bash
