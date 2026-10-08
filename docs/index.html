@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISBOT — offline demo (internetsiz ishlaydi)</title>
+<style>
+  :root{--navy:#0d2b45;--green:#1e7f5c;--amber:#f0a500;--red:#c0392b;--blue:#1f6feb;
+        --line:#dfe6ee;--light:#f4f7fb;--ink:#12212f;--muted:#647687}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       color:var(--ink);background:#fff;-webkit-text-size-adjust:100%}
+  header{background:var(--navy);color:#fff;padding:16px 14px 14px}
+  header h1{margin:0;font-size:22px;letter-spacing:.5px}
+  header p{margin:6px 0 0;color:#b8ccdd;font-size:13px}
+  .badge{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);
+         padding:2px 8px;border-radius:20px;font-size:11.5px;margin-top:8px}
+  main{padding:12px 12px 28px;max-width:880px;margin:0 auto}
+  section{margin:14px 0 18px}
+  h2{font-size:16px;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h2 .n{color:var(--muted);font-weight:400;font-size:13px}
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:10px}
+  .card b{display:block;font-size:11px;letter-spacing:.6px;color:var(--muted);text-transform:uppercase}
+  .card .v{font-size:20px;font-weight:700;margin:3px 0 2px}
+  .card small{color:var(--muted);font-size:11.5px;display:block}
+  .g{color:var(--green)} .r{color:var(--red)} .a{color:var(--amber)} .b{color:var(--blue)} .nv{color:var(--navy)}
+  .panel{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--light)}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:8px 0 3px}
+  input{width:100%;padding:9px 10px;font-size:16px;border:1px solid var(--line);border-radius:9px;background:#fff}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .out{margin-top:10px;padding:10px;border-radius:10px;background:#fff;border:1px dashed var(--line);font-size:14px}
+  .zone{font-weight:700}
+  .tag{display:inline-block;padding:2px 7px;border-radius:6px;color:#fff;font-size:12px;margin-right:6px}
+  .tag.red{background:var(--red)} .tag.yellow{background:var(--amber);color:#3a2a00}
+  .tag.green{background:var(--green)} .tag.blue{background:var(--blue)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border:1px solid var(--line);padding:6px 7px;text-align:left;vertical-align:top}
+  th{background:var(--navy);color:#fff;font-weight:600;font-size:12px}
+  tr:nth-child(even) td{background:#fbfdff}
+  footer{color:var(--muted);font-size:11.5px;border-top:1px solid var(--line);padding-top:10px;margin-top:18px}
+  .warn{background:#fff8e6;border:1px solid #f0d79a;border-radius:8px;padding:8px 10px;font-size:12.5px;margin-top:8px}
+  @media (max-width:420px){.cards{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>ISBOT — jonli demo</h1>
+  <p>Raqamli ekologik verifikatsiya: o'lchov ishonchi · huquqiy zanjir · avtomatika</p>
+  <span class="badge">⚡ Internetsiz ishlaydi — barcha hisob brauzerda, tashqi resurs yo'q</span>
+</header>
+
+<main>
+  <section>
+    <h2><span class="n">01</span> · Muammo raqamlarda</h2>
+    <div class="cards">
+      <div class="card"><b>Kompensatsiya</b><div class="v r">2–10×</div>
+        <small>O'RQ-1143 (04.05.2026): normadan ortiq tashlama uchun</small></div>
+      <div class="card"><b>Toshkent PM2,5</b><div class="v r">21 / 181 ↔ 0 / 183</div>
+        <small>Isitish mavsumi ↔ issiq mavsum (365 kun, &gt;35 µg/m³)</small></div>
+      <div class="card"><b>CBAM default ustama</b><div class="v a">10% → 30%</div>
+        <small>2026 → 2028 (metall, sement, alyuminiy)</small></div>
+      <div class="card"><b>Sertifikat narxi</b><div class="v nv">€75,36/t</div>
+        <small>EU ETS auktsion o'rtachasi, Q1 2026</small></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">02</span> · Qaror kalkulyatori <span class="n">(TZ §5 qoidasi: R = qiymat / norma)</span></h2>
+    <div class="panel">
+      <div class="row">
+        <div><label for="q">O'lchangan qiymat, µg/m³</label><input id="q" type="number" value="217" min="0" step="0.1" inputmode="decimal"></div>
+        <div><label for="l">Norma (SanQaM 0053-23), µg/m³</label><input id="l" type="number" value="35" min="0.1" step="0.1" inputmode="decimal"></div>
+      </div>
+      <div class="row">
+        <div><label for="c">Ishonch darajasi C (0–1)</label><input id="c" type="number" value="0.92" step="0.01" min="0" max="1" inputmode="decimal"></div>
+        <div><label for="n">Indikatorlar soni (R&gt;1 bo'lganlari)</label><input id="n" type="number" value="2" step="1" min="0" max="9" inputmode="numeric"></div>
+      </div>
+      <div class="out" id="out"></div>
+      <div class="warn">Diqqat: tizim <b>jarima hisoblamaydi</b> — u faqat «mos / mos emas» xulosasini ishonch bilan beradi (JCGM 106 · ILAC-G8). Xato jazodan ajratiladi.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">03</span> · CBAM kalkulyatori <span class="n">(eksportchi uchun)</span></h2>
+    <div class="panel">
+      <div class="row">
+        <div><label for="t">Eksport hajmi, tonna/yil</label><input id="t" type="number" value="20000" min="0" step="100" inputmode="decimal"></div>
+        <div><label for="e">Solishtirma emissiya, tCO₂/tonna</label><input id="e" type="number" value="1.5" min="0" step="0.05" inputmode="decimal"></div>
+      </div>
+      <div class="out" id="out2"></div>
+      <div class="warn">Hisob <b>yo'naltiruvchi</b>: rasmiy CBAM hisobi akkreditlangan verifikator ma'lumotiga tayanadi. Qiymat €75,36/t (Q1 2026) — auktsion o'rtachasi.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">04</span> · Huquqiy xarita <span class="n">(majburiyat → modul)</span></h2>
+    <table>
+      <tr><th>Hujjat (sana)</th><th>Majburiyat</th><th>Modul</th></tr>
+      <tr><td>O'RQ-1143 (04.05.2026)</td><td>Normadan ortiq tashlama kompensatsiyasi 2–10 baravar</td><td>ISBOT-HAVO</td></tr>
+      <tr><td>PQ-343 (18.11.2025)</td><td>I/II toifa stansiyasi 01.03.2026 gacha; Yagona platforma 01.09.2026</td><td>HAVO + API</td></tr>
+      <tr><td>PF-46 (25.03.2026)</td><td>Chiqindi −10,5%; avtomatik monitoring; Toshkent dasturi</td><td>HAVO + CHIQINDI</td></tr>
+      <tr><td>«Issiqxona gazlari» qonuni (01.01.2026)</td><td>Uglerod birliklari verifikatsiyasi; 80% xalqaro bozorga</td><td>ISBOT-KARBON</td></tr>
+      <tr><td>Konstitutsiya 49-modda + Aarhus</td><td>Axborot olish huquqi; apellyatsiya (javob bo'lmasa eskalatsiya)</td><td>huquqiy qatlam</td></tr>
+    </table>
+    <div class="out">Registr: <b>21 hujjat × 22 element = 53 bog'lanish</b> · eng kami 2 asos · zaif element 0 — bu ko'rsatkich mashina bilan tekshiriladi.</div>
+  </section>
+
+  <footer>
+    ISBOT · TDIU «Eng yaxshi kreativ g'oya» tanlovi · bu demo <b>oflayn</b>: internet, server yoki tashqi kutubxona kerak emas.<br>
+    Manbalar va tekshirish buyruqlari: <b>04-DALILLAR-REYESTRI.md</b> · moliyaviy model: <b>05-FINMODEL.xlsx</b> · strategiya: <b>07-GALABA-STRATEGIYASI.md</b>
+  </footer>
+</main>
+
+<script>
+  function son(id){
+    var raw=document.getElementById(id).value;
+    return String(raw).trim()===''?NaN:Number(raw);
+  }
+  function xato(out,msg){
+    out.innerHTML='<div class="warn" role="alert"><b>Kiritilgan qiymatni tekshiring.</b> '+msg+'</div>';
+  }
+  function zoneHisob(){
+    var out=document.getElementById('out');
+    var q=son('q'), L=son('l'), C=son('c'), n=son('n');
+    if(!Number.isFinite(q)) return xato(out,"O'lchangan qiymatni son sifatida kiriting.");
+    if(q<0) return xato(out,"O'lchangan qiymat manfiy bo'lmasligi kerak.");
+    if(!Number.isFinite(L)) return xato(out,'Normani son sifatida kiriting.');
+    if(L<=0) return xato(out,'Norma noldan katta bo\'lishi kerak.');
+    if(!Number.isFinite(C)||C<0||C>1) return xato(out,'C ishonch darajasi 0 va 1 oralig\'ida bo\'lishi kerak.');
+    if(!Number.isInteger(n)||n<0||n>9) return xato(out,'Indikatorlar soni 0–9 oralig\'idagi butun son bo\'lishi kerak.');
+    var R=q/L, zona, asos, qoida='';
+    if(!Number.isFinite(R)||R>Number.MAX_SAFE_INTEGER) return xato(out,'Nisbat xavfsiz hisoblash chegarasidan oshdi.');
+    if(C<0.5){ zona='blue'; asos="Ko'k-neytral — ma'lumot yetarli emas (bu «toza» degani EMAS)"; }
+    else if(R>=2.0){ zona='red'; asos='Qizil — R ≥ 2,0 (normadan 2 baravar va undan ko\u2019p)'; }
+    else if(R>1.0){ zona='yellow'; asos='Sariq — 1,0 &lt; R &lt; 2,0 (oshgan, lekin 2 baravardan kam)'; }
+    else { zona='green'; asos='Yashil — R ≤ 1,0 va C ≥ 0,5 (norma ichida)'; }
+    // O1 override — dvigatel bilan AYNAN bir xil (engine.py STEP_UP: faqat green/yellow ko'tariladi)
+    if(n>=2 && (zona==='green' || zona==='yellow')){
+      var tartib={'green':'yellow','yellow':'red','red':'red','blue':'blue'};
+      var eski=zona; zona=tartib[zona];
+      if(zona!==eski){ qoida=' · qo\u2019llanilgan qoida: O1 ('+n+' indikatorda R&gt;1 → rang bir pog\u2019ona yuqoriga ko\u2019tarildi)'; }
+    }
+    var og = (R<=2.0)?'1':((R<=5.0)?'2':'3');   // severity §5.4: 1 (R≤2) · 2 (2<R≤5) · 3 (R>5)
+    var nom={'red':'Qizil','yellow':'Sariq','green':'Yashil','blue':"Ko'k-neytral"}[zona];
+    var belgi={'red':'⛔','yellow':'⚠️','green':'✅','blue':'🔵'}[zona];
+    out.innerHTML =
+      '<span class="tag '+zona+'">'+belgi+' '+nom+'</span>'+
+      '<b>R = '+q.toFixed(1)+' / '+L.toFixed(1)+' = '+R.toFixed(2)+'</b> · C = '+C.toFixed(2)+' · Severity = '+og+
+      '<div style="margin-top:6px">'+asos+qoida+'</div>'+
+      '<div style="margin-top:6px;color:#647687;font-size:12.5px">Isbot kartasi: o\'lchash oynasi · qiymat · noaniqlik U (k=2) · chegara L · qaror qoidasi · kalibrovka · xom ma\'lumot havolasi · inson tekshiruvi · e\'tiroz yo\'li (10 kun / 30 ish kuni).</div>';
+  }
+  function cbamHisob(){
+    var out=document.getElementById('out2');
+    var t=son('t'), e=son('e');
+    if(!Number.isFinite(t)) return xato(out,'Eksport hajmini son sifatida kiriting.');
+    if(t<0) return xato(out,'Eksport hajmi manfiy bo\'lmasligi kerak.');
+    if(!Number.isFinite(e)) return xato(out,'Solishtirma emissiyani son sifatida kiriting.');
+    if(e<0) return xato(out,'Solishtirma emissiya manfiy bo\'lmasligi kerak.');
+    var narx=75.36, jami=t*e, qiymat=jami*narx;
+    if(!Number.isFinite(jami)||!Number.isFinite(qiymat)||qiymat>Number.MAX_SAFE_INTEGER)
+      return xato(out,'Hisob xavfsiz son chegarasidan oshdi; kichikroq qiymat kiriting.');
+    function fmt(n){ return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+    function us(ulush){ return fmt(qiymat*ulush); }
+    out.innerHTML =
+      '<b>Emissiya: '+fmt(jami)+' tCO₂</b> · sertifikat qiymati ≈ <b>€'+fmt(qiymat)+'</b>'+
+      '<table style="margin-top:8px"><tr><th>Holat</th><th>Ustama</th><th>Qo\'shimcha xarajat</th></tr>'+
+      '<tr><td>Tekshirilgan (verified) ma\'lumot</td><td>0%</td><td>€0 — raqobatbardoshlik saqlanadi</td></tr>'+
+      '<tr><td>Default qiymat, 2026</td><td>10%</td><td>€'+us(0.10)+'</td></tr>'+
+      '<tr><td>Default qiymat, 2027</td><td>20%</td><td>€'+us(0.20)+'</td></tr>'+
+      '<tr><td>Default qiymat, 2028+</td><td>30%</td><td>€'+us(0.30)+'</td></tr></table>';
+  }
+  ['q','l','c','n'].forEach(function(id){document.getElementById(id).addEventListener('input',zoneHisob);});
+  ['t','e'].forEach(function(id){document.getElementById(id).addEventListener('input',cbamHisob);});
+  zoneHisob(); cbamHisob();
+</script>
+</body>
+</html>
